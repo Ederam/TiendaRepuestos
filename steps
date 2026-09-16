@@ -1,0 +1,73 @@
+# 1. Script de Inicialización (Terminal / PowerShell)
+
+# 1. Crear y navegar al directorio raíz
+New-Item -ItemType Directory -Force -Path "D:\ER-DEV\Repuestos"
+Set-Location -Path "D:\ER-DEV\Repuestos"
+
+# 2. Inicializar el repositorio Git
+git init
+
+# 3. Crear el archivo .gitignore profesional para .NET y Angular
+dotnet new gitignore
+
+# 4. Crear la estructura de carpetas
+New-Item -ItemType Directory -Force -Path "src/Core/TiendaRepuestos.Domain"
+New-Item -ItemType Directory -Force -Path "src/Core/TiendaRepuestos.Application"
+New-Item -ItemType Directory -Force -Path "src/Infrastructure/TiendaRepuestos.Infrastructure"
+New-Item -ItemType Directory -Force -Path "src/Adapters/TiendaRepuestos.Api"
+New-Item -ItemType Directory -Force -Path "tests/TiendaRepuestos.UnitTests"
+New-Item -ItemType Directory -Force -Path "docs"
+
+# 5. Crear la Solución .NET
+dotnet new sln --name TiendaRepuestos
+
+# 6. Crear los proyectos individuales (.NET 8)
+dotnet new classlib -o src/Core/TiendaRepuestos.Domain -f net8.0
+dotnet new classlib -o src/Core/TiendaRepuestos.Application -f net8.0
+dotnet new classlib -o src/Infrastructure/TiendaRepuestos.Infrastructure -f net8.0
+dotnet new webapi -o src/Adapters/TiendaRepuestos.Api -f net8.0
+dotnet new xunit -o tests/TiendaRepuestos.UnitTests -f net8.0
+
+# 7. Agregar los proyectos a la Solución (.sln)
+dotnet sln add src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
+dotnet sln add src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
+dotnet sln add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj
+dotnet sln add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj
+dotnet sln add tests/TiendaRepuestos.UnitTests/TiendaRepuestos.UnitTests.csproj
+
+# 8. Establecer las referencias entre capas (Regla de la Arquitectura Hexagonal)
+# Application -> Domain
+dotnet add src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj reference src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
+
+# Infrastructure -> Application + Domain
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj reference src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
+
+# Api -> Application + Infrastructure
+dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
+dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj reference src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj
+
+# UnitTests -> Domain + Application
+dotnet add tests/TiendaRepuestos.UnitTests/TiendaRepuestos.UnitTests.csproj reference src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
+dotnet add tests/TiendaRepuestos.UnitTests/TiendaRepuestos.UnitTests.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
+
+# 9. Limpiar archivos autogenerados innecesarios
+Remove-Item -Path "src/Core/TiendaRepuestos.Domain/Class1.cs" -ErrorAction SilentlyContinue
+Remove-Item -Path "src/Core/TiendaRepuestos.Application/Class1.cs" -ErrorAction SilentlyContinue
+Remove-Item -Path "src/Infrastructure/TiendaRepuestos.Infrastructure/Class1.cs" -ErrorAction SilentlyContinue
+
+# 10. Compilar la solución para verificar la correcta vinculación
+dotnet build
+
+New-Item -ItemType File -Force -Path "docs/LECCIONES_APRENDIDAS.md"
+
+Limpieza de cache
+dotnet nuget locals all --clear
+Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
+
+# 1. Restaurar dependencias e índice de NuGet
+dotnet restore
+
+# 2. Compilar la solución limpia
+dotnet build
+

@@ -1,0 +1,2 @@
+git add .
+git commit -m "chore: inicialización de la solución .NET 8 con arquitectura hexagonal y solución de espacio en disco"
