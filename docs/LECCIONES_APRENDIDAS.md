@@ -30,3 +30,7 @@
 * **Causa:** La caché de NuGet y temporales del SDK de .NET operan en el disco del sistema (`C:`), aunque el proyecto esté alojado en `D:`.
 * **Solución:** Ejecutar `dotnet nuget locals all --clear` y liberar espacio en la unidad de sistema.
 
+#### ADR-002: Encapsulamiento del Dominio y Puertos de Salida
+* **Decisión:** La entidad `Producto` utiliza setters privados y métodos explícitos (`ReducirStock`, `AumentarStock`) para evitar estados inconsistentes en la base de datos.
+* **Beneficio:** Se garantiza que ninguna regla de negocio o control de inventario se salte desde la capa de API o de Infraestructura.
+

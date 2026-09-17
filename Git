@@ -1,2 +1,17 @@
 git add .
 git commit -m "chore: inicialización de la solución .NET 8 con arquitectura hexagonal y solución de espacio en disco"
+
+
+# 1. Asegurar que los cambios locales estén registrados en el commit
+git add .
+git commit -m "chore: inicialización de la solución .NET 8 con arquitectura hexagonal y solución de espacio en disco"
+
+# 2. Renombrar la rama principal a main (buena práctica)
+git branch -M main
+
+# 3. Vincular el repositorio local con GitHub (Reemplaza la URL)
+git remote add origin https://github.com/Ederam/TiendaRepuestos.git
+
+# 4. Subir la solución y la documentación a GitHub
+git push -u origin main
+
