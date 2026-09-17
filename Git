@@ -15,3 +15,14 @@ git remote add origin https://github.com/Ederam/TiendaRepuestos.git
 # 4. Subir la solución y la documentación a GitHub
 git push -u origin main
 
+# 1. Verificar el estado de los archivos modificados y creados
+git status
+
+# 2. Agregar los cambios al área de preparación (staging)
+git add .
+
+# 3. Guardar el commit con mensaje descriptivo (Conventional Commits)
+git commit -m "feat: configurado ApplicationDbContext con PostgreSQL, mapeo Fluent API para Producto y solucionado error de compilación CS0106"
+
+# 4. Subir los cambios a GitHub
+git push origin main

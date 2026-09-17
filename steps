@@ -80,3 +80,17 @@ dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj package M
 
 Definición del Puerto del Repositorio (src/Core/TiendaRepuestos.Domain/Ports/IProductoRepository.cs)
 
+Configuración de PostgreSQL en Infrastructure
+Ahora configuraremos la persistencia mapeando la entidad mediante Entity Framework Core.
+
+A. Configuración del Mapeo de la Entidad (src/Infrastructure/TiendaRepuestos.Infrastructure/Persistence/Configurations/ProductoConfiguration.cs)
+
+C. Cadena de Conexión en src/Adapters/TiendaRepuestos.Api/appsettings.json
+
+Creación de la Primera Migración
+Ejecuta el siguiente comando en la terminal para generar los scripts de migración de la base de datos:
+
+PowerShell
+dotnet ef migrations add InitialCreate --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+docker compose up -d
