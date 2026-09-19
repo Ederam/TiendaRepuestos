@@ -26,3 +26,8 @@ git commit -m "feat: configurado ApplicationDbContext con PostgreSQL, mapeo Flue
 
 # 4. Subir los cambios a GitHub
 git push origin main
+
+git add .
+git commit -m "fix: cambiado puerto del contenedor a 5433 por conflicto con PostgreSQL nativo de Windows"
+git push origin main
+

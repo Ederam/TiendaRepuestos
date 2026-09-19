@@ -34,3 +34,8 @@
 * **Decisión:** La entidad `Producto` utiliza setters privados y métodos explícitos (`ReducirStock`, `AumentarStock`) para evitar estados inconsistentes en la base de datos.
 * **Beneficio:** Se garantiza que ninguna regla de negocio o control de inventario se salte desde la capa de API o de Infraestructura.
 
+#### Troubleshooting: Conflicto de Puerto 5432 con PostgreSQL Nativo de Windows
+* **Problema:** Error `28P01` por colisión de servicios escuchando en el puerto local `5432`.
+* **Causa:** Un servicio de PostgreSQL instalado localmente en Windows estaba interceptando las peticiones enviadas al contenedor.
+* **Solución:** Mapear el contenedor al puerto externo `5433` (`5433:5432`) en `docker-compose.yml` y actualizar la cadena de conexión en `appsettings.json`.
+

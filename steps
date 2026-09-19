@@ -94,3 +94,99 @@ PowerShell
 dotnet ef migrations add InitialCreate --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
 docker compose up -d
+
+dism.exe /online /enable-feature /featurename:VirtualMachinePlatform /all /norestart
+dism.exe /online /enable-feature /featurename:Microsoft-Windows-Subsystem-Linux /all /norestart
+
+docker version
+
+wsl --update
+
+Mover la ubicación de WSL / Docker a la unidad D
+# 1. Apagar WSL
+wsl --shutdown
+
+# 2. Exportar la distribución
+wsl --export docker-desktop D:\Docker\wsl-data\docker-desktop.tar
+
+# 3. Eliminar el registro antiguo del disco C:
+wsl --unregister docker-desktop
+
+# 4. Importar en la nueva ubicación del disco D:
+wsl --import docker-desktop D:\Docker\wsl-data D:\Docker\wsl-data\docker-desktop.tar --version 2
+
+# 5. Eliminar el archivo temporal
+Remove-Item D:\Docker\wsl-data\docker-desktop.tar
+
+Ejecuta el siguiente comando para verificar el estado:
+
+PowerShell
+wsl --list --verbose
+
+
+Limitar el uso de RAM para WSL 2 a 4 GB
+Crea un archivo llamado .wslconfig en la ruta C:\Users\CAMILO\.wslconfig con el siguiente contenido:
+
+Ini, TOML
+[wsl2]
+memory=4GB
+processors=2
+
+Ejecutar el Contenedor:
+docker compose up -d
+
+Verificar el Estado del Contenedor:
+
+PowerShell
+docker ps
+
+ejecutaremos el comando de Entity Framework Core para crear la base de datos pos_repuestos_db y la tabla productos automáticamente.
+
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+Reinicio del Contenedor y Limpieza de Volumen
+# 1. Detener el contenedor y eliminar el volumen persistente previo
+docker compose down -v
+
+# 2. Recrear el contenedor con la configuración actualizada
+docker compose up -d
+
+# 3. Verificar que el contenedor esté en estado Up
+docker ps
+
+Ejecución de la Migración
+Con las credenciales sincronizadas y el contenedor recién desplegado, ejecuta el comando de actualización de base de datos:
+
+PowerShell
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+(Cambiar Puerto en Docker)
+Para evitar conflictos entre el PostgreSQL de Windows y el de Docker, cambiaremos el puerto externo del contenedor a 5433.
+
+services:
+  postgres-db:
+    image: postgres:16-alpine
+    container_name: tienda_repuestos_db
+    environment:
+      POSTGRES_DB: pos_repuestos_db
+      POSTGRES_USER: dev_user
+      POSTGRES_PASSWORD: DevPassword123!
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
+
+Recrear el Contenedor y Probar la Migración
+# 1. Reiniciar el contenedor con el nuevo puerto
+docker compose down -v
+docker compose up -d
+
+# 2. Verificar que mapee el puerto 5433
+docker ps
+
+# 3. Aplicar la migración
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
