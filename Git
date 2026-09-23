@@ -35,3 +35,11 @@ git add .
 git commit -m "feat: completada integración de API, controlador de productos e inyección de dependencias con tipado explícito"
 git push origin main
 
+# 1. Verificar los archivos creados y modificados
+git status
+
+# 2. Agregar todos los cambios al área de preparación
+git add .
+
+# 3. Realizar el commit documentando las entregas del Sprint 2
+git commit -m "feat(categoria): implementa modulo completo de categorias y alineacion de stock minimo en productos"

@@ -190,3 +190,129 @@ docker ps
 # 3. Aplicar la migración
 dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
+Conexion   a la build
+TiendaRepuestos-Local
+localhost ó 127.0.0.1
+5433
+repuestos_db
+postgres
+
+Recuento de la estructura del proyecto
+TiendaRepuestos/
+├── src/
+│   ├── Core/
+│   │   ├── TiendaRepuestos.Domain/         (Capa 1: Dominio)
+│   │   └── TiendaRepuestos.Application/    (Capa 2: Aplicación)
+│   ├── Infrastructure/
+│   │   └── TiendaRepuestos.Infrastructure/ (Capa 3: Infraestructura)
+│   └── Adapters/
+│       └── TiendaRepuestos.Api/            (Capa 4: Adaptador API)
+└── tests/
+    └── TiendaRepuestos.UnitTests/          (Pruebas Unitarias)
+
+    encender el contenedor
+    docker compose up -d
+
+    Crear base de datos en postgres
+    ejecutar migraciones
+    dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+Crear y Aplicar Migración de EF Core
+Para actualizar PostgreSQL en Docker con la nueva tabla Categorias:
+
+PowerShell
+dotnet ef migrations add AddCategoriasTable --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --s    
+
+Levantar el contenedor de PostgreSQL
+# Verificar si el contenedor está corriendo o detenido
+docker ps -a
+
+# Si el contenedor está detenido, inícialo (o usa el nombre/ID de tu contenedor)
+docker start tienda_repuestos_db
+
+# O si utilizas Docker Compose desde la raíz
+docker compose up -d
+
+
+Levantar el contenedor de PostgreSQL
+# Listar todos los contenedores para identificar el nombre o ID exacto del de PostgreSQL
+docker ps -a
+
+# iniciar el contenedor
+docker start tienda_repuestos_db
+
+Verificar que el puerto 5433 esté activo
+docker ps
+
+Migracion
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+Crear la migración para Categorías
+dotnet ef migrations add AgregarTablaCategorias --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+Aplicar la migración en PostgreSQL
+
+Prueba insercion de categoria
+{
+  "nombre": "Frenos y Suspensión",
+  "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
+}
+
+
+Response correcta
+{
+  "id": "6a832806-2a9c-48c7-83c2-1cdc385d3744",
+  "nombre": "Frenos y Suspensión",
+  "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado",
+  "activa": true
+}
+  'https://localhost:7298/api/Categorias' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "nombre": "Frenos y Suspensión",
+  "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
+}'
+
+crear producto asociado a la categoria reciuen creada
+{
+  "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+  "codigoParte": "04465-0K020",
+  "precioVenta": 185000.00,
+  "stockInicial": 25,
+  "stockMinimo": 5,
+  "estado": 0,
+  "categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
+}
+Producto creado
+
+{
+  "id": "b9c88998-e502-4d44-888a-b529ab74e147",
+  "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+  "codigoParte": "04465-0K020",
+  "precioVenta": 185000,
+  "stockActual": 25,
+  "estado": "0",
+  "activo": true
+}
+
+curl -X 'POST' \
+  'https://localhost:7298/api/Productos' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+  "codigoParte": "04465-0K020",
+  "precioVenta": 185000.00,
+  "stockInicial": 25,
+  "stockMinimo": 5,
+  "estado": 0,
+  "categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
+}'
+
+Consulta de productos
+curl -X 'GET' \
+  'https://localhost:7298/api/Productos' \
+  -H 'accept: text/plain'

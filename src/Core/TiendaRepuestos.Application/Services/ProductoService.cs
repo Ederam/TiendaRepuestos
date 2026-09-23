@@ -9,28 +9,15 @@ using TiendaRepuestos.Application.DTOs;
 using TiendaRepuestos.Domain.Entities;
 using TiendaRepuestos.Domain.Ports;
 
-/// <summary>
-/// Servicio de aplicación que coordina los casos de uso relativos a la gestión de repuestos.
-/// </summary>
 public class ProductoService
 {
     private readonly IProductoRepository _repository;
 
-    /// <summary>
-    /// Inicializa una nueva instancia de <see cref="ProductoService"/>.
-    /// </summary>
-    /// <param name="repository">Instancia del repositorio del puerto de productos.</param>
     public ProductoService(IProductoRepository repository)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
     }
 
-    /// <summary>
-    /// Registra un nuevo repuesto en el inventario garantizando la validación de dominio.
-    /// </summary>
-    /// <param name="dto">Objeto con los datos de creación del repuesto.</param>
-    /// <param name="cancellationToken">Token para la cancelación asíncrona de la operación.</param>
-    /// <returns>DTO con la información del repuesto creado y su ID asignado.</returns>
     public async Task<ProductoResponseDto> CrearAsync(CrearProductoDto dto, CancellationToken cancellationToken = default)
     {
         Guid categoriaValidaId = dto.CategoriaId == Guid.Empty ? Guid.NewGuid() : dto.CategoriaId;
@@ -40,29 +27,48 @@ public class ProductoService
             dto.CodigoParte ?? string.Empty,
             dto.PrecioVenta,
             dto.StockInicial,
+            dto.StockMinimo,
             dto.Estado,
             categoriaValidaId
         );
 
         await _repository.AddAsync(nuevoProducto, cancellationToken);
-
-        ProductoResponseDto respuesta = ProductoResponseDto.FromEntity(nuevoProducto);
-        return respuesta;
+        return ProductoResponseDto.FromEntity(nuevoProducto);
     }
 
-    /// <summary>
-    /// Busca repuestos por coincidencia en nombre o código de parte/referencia.
-    /// </summary>
-    /// <param name="query">Término de búsqueda ingresado por el usuario.</param>
-    /// <param name="cancellationToken">Token para la cancelación asíncrona de la operación.</param>
-    /// <returns>Colección de DTOs con los repuestos encontrados.</returns>
     public async Task<IEnumerable<ProductoResponseDto>> BuscarAsync(string? query, CancellationToken cancellationToken = default)
     {
         string terminoBusqueda = query ?? string.Empty;
-
         IEnumerable<Producto> productosObtenidos = await _repository.SearchAsync(terminoBusqueda, cancellationToken);
+        return productosObtenidos.Select(ProductoResponseDto.FromEntity);
+    }
 
-        IEnumerable<ProductoResponseDto> listaRespuesta = productosObtenidos.Select(ProductoResponseDto.FromEntity);
-        return listaRespuesta;
+    public async Task<ProductoResponseDto?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        Producto? producto = await _repository.GetByIdAsync(id, cancellationToken);
+        return producto is null ? null : ProductoResponseDto.FromEntity(producto);
+    }
+
+    public async Task<ProductoResponseDto> ActualizarAsync(Guid id, ActualizarProductoDto dto, CancellationToken cancellationToken = default)
+    {
+        Producto producto = await _repository.GetByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"No se encontró el repuesto con ID: {id}");
+
+        producto.ActualizarInformacion(dto.Nombre, dto.CodigoParte, dto.CategoriaId);
+        producto.ActualizarPrecio(dto.PrecioVenta);
+
+        await _repository.UpdateAsync(producto, cancellationToken);
+        return ProductoResponseDto.FromEntity(producto);
+    }
+
+    public async Task<ProductoResponseDto> AjustarStockAsync(Guid id, int cantidad, CancellationToken cancellationToken = default)
+    {
+        Producto producto = await _repository.GetByIdAsync(id, cancellationToken)
+            ?? throw new KeyNotFoundException($"No se encontró el repuesto con ID: {id}");
+
+        producto.AjustarStock(cantidad);
+
+        await _repository.UpdateAsync(producto, cancellationToken);
+        return ProductoResponseDto.FromEntity(producto);
     }
 }

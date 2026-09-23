@@ -20,6 +20,7 @@ public class ApplicationDbContext : DbContext
     /// Obtiene o establece el conjunto de datos de los productos/repuestos.
     /// </summary>
     public DbSet<Producto> Productos => Set<Producto>();
+    public DbSet<Categoria> Categorias => Set<Categoria>();
 
     /// <summary>
     /// Configura las entidades del modelo aplicando todas las configuraciones Fluent API del ensamblado.
