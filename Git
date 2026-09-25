@@ -43,3 +43,15 @@ git add .
 
 # 3. Realizar el commit documentando las entregas del Sprint 2
 git commit -m "feat(categoria): implementa modulo completo de categorias y alineacion de stock minimo en productos"
+
+# 1. Inspeccionar archivos actualizados
+git status
+
+# 2. Agregar cambios
+git add .
+
+# 3. Guardar commit con la bitácora y el módulo de ventas
+git commit -m "feat(ventas): implementa agregado de ventas, reduccion de stock, controlador REST y bitacora ADR"
+
+# 4. Enviar a repositorio remoto (si aplica)
+git push

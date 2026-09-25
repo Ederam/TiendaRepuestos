@@ -20,6 +20,11 @@ Este documento centraliza los hallazgos técnicos, decisiones arquitectónicas y
 * **Contexto:** Mantener un estándar estricto de legibilidad y claridad de código en todo el Backend.
 * **Decisión:** Prohibir la declaración implícita `var` en favor del tipado explícito de variables (`IEnumerable<T>`, `WebApplicationBuilder`, `string?`, etc.).
 
+### ADR-004: Inyección de Dependencias Modularizada por Capas (IoC)
+* **Contexto:** Evitar que el archivo `Program.cs` de la API se convierta en un monolito inmanejable de registros de servicios y rompa el encapsulamiento al referenciar directamente implementaciones concretas de infraestructura.
+* **Decisión:** Crear una clase estática `DependencyInjection.cs` con métodos de extensión de `IServiceCollection` (`AddApplication()`, `AddInfrastructure()`) dentro de cada biblioteca de clases.
+* **Consecuencia:** Mantenibilidad, alto desacoplamiento y un `Program.cs` limpio con solo llamadas modulares de alto nivel.
+
 ---
 
 ## 🛠️ Registro de Errores y Lecciones Aprendidas
@@ -45,3 +50,20 @@ Este documento centraliza los hallazgos técnicos, decisiones arquitectónicas y
 * **Causa Raíz:** El servidor de base de datos PostgreSQL dentro de Docker estaba corriendo, pero la base de datos lógica especificada aún no había sido inicializada en el catálogo.
 * **Solución:** Conectarse inicialmente a la base por defecto `postgres` en pgAdmin para crear la base de datos `repuestos_db`, o aplicar las migraciones de Entity Framework Core mediante `dotnet ef database update`.
 * **Lección Aprendida:** Separar la existencia de la instancia del servidor PostgreSQL de la creación específica del esquema y base de datos solicitada por la aplicación.
+
+---
+
+### 4. Error de Compilación en Class Library `CS0234 / CS0246`: `IServiceCollection` no encontrado
+* **Síntoma:** Al modularizar la inyección de dependencias en `TiendaRepuestos.Application`, la compilación falla indicando que `IServiceCollection` o el espacio de nombres `Microsoft.Extensions.DependencyInjection` no existen.
+* **Causa Raíz:** Los proyectos de tipo *Class Library* (`.csproj`) no incluyen por defecto el Framework Web de ASP.NET Core donde reside la abstracción de IoC.
+* **Solución:** Agregar el paquete de abstracción ligero `Microsoft.Extensions.DependencyInjection.Abstractions` mediante la consola NuGet / CLI:
+  `dotnet add package Microsoft.Extensions.DependencyInjection.Abstractions`.
+* **Lección Aprendida:** Para mantener Clean Architecture pura en bibliotecas de clases sin importar todo el framework pesado de Web API, se deben incluir únicamente las abstracciones ligeras de NuGet requeridas.
+
+---
+
+### 5. Error de Conexión en Migraciones EF Core: `NpgsqlException: Failed to connect to 127.0.0.1:5433`
+* **Síntoma:** Al ejecutar `dotnet ef database update`, el CLI se detiene con error `System.Net.Sockets.SocketException (10061): No se puede establecer una conexión ya que el equipo de destino denegó expresamente dicha conexión`.
+* **Causa Raíz:** El servicio o contenedor Docker de PostgreSQL no estaba corriendo en segundo plano al momento de desplegar la migración.
+* **Solución:** Iniciar el servicio o contenedor de PostgreSQL (ej. `docker compose up -d` o `podman start`) antes de ejecutar el comando de actualización de base de datos.
+* **Lección Aprendida:** El proceso de migración de EF Core valida físicamente el esquema ejecutando comandos SQL en vivo; la infraestructura debe estar operativa antes de correr comandos del CLI de `dotnet ef`.

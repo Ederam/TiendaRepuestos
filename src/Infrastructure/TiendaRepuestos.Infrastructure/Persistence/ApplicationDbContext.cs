@@ -21,6 +21,8 @@ public class ApplicationDbContext : DbContext
     /// </summary>
     public DbSet<Producto> Productos => Set<Producto>();
     public DbSet<Categoria> Categorias => Set<Categoria>();
+    public DbSet<Venta> Ventas => Set<Venta>();
+    public DbSet<DetalleVenta> DetallesVenta => Set<DetalleVenta>();
 
     /// <summary>
     /// Configura las entidades del modelo aplicando todas las configuraciones Fluent API del ensamblado.

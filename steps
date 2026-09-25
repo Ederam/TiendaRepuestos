@@ -243,7 +243,7 @@ docker ps -a
 # iniciar el contenedor
 docker start tienda_repuestos_db
 
-Verificar que el puerto 5433 esté activo
+# Verificar que el puerto 5433 esté activo
 docker ps
 
 Migracion
@@ -316,3 +316,65 @@ Consulta de productos
 curl -X 'GET' \
   'https://localhost:7298/api/Productos' \
   -H 'accept: text/plain'
+
+
+Estado de la Solución (Cierre del Sprint 2)
+[ Domain ] ────────► Entities (Producto, Categoria) + Ports (IProductoRepository, ICategoriaRepository)
+[ Application ] ───► Services + DTOs (CRUD Productos / CRUD Categorias)
+[ Infrastructure ] ► ApplicationDbContext + Configurations + Repositorios EF Core (PostgreSQL)
+[ Adapters ] ──────► Api Controllers (ProductosController, CategoriasController) + Swagger UI
+
+Crear y Aplicar Migración de EF Core en PostgreSQL
+dotnet ef migrations add AgregarTablaVentas --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+dotnet add src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj package Microsoft.Extensions.DependencyInjection.Abstractions
+
+dotnet ef migrations add AgregarTablaVentas --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+reintento de migracion
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+# iniciar el contenedor
+docker start tienda_repuestos_db
+
+# Verificar que el puerto 5433 esté activo
+docker ps
+
+Crear Venta
+{
+  "numeroComprobante": "VTA-0001",
+  "metodoPago": 1,
+  "detalles": [
+    {
+      "productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
+      "cantidad": 2
+    }
+  ]
+}
+
+Response
+{
+    "id": "c0e7fbf5-f1dc-43ae-8adb-b0a7f48001b9",
+    "numeroComprobante": "VTA-0001",
+    "fechaVenta": "2026-09-25T02:33:07.7921703Z",
+    "metodoPago": "Efectivo",
+    "estado": "Completada",
+    "subtotal": 90000.00,
+    "impuesto": 17100.0000,
+    "total": 107100.0000,
+    "detalles": [
+        {
+            "id": "29ee9c61-cc40-478a-b27c-7d2127bf709f",
+            "productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
+            "nombreProducto": "Pastillas de Freno Chevrolet Spark GT",
+            "cantidad": 2,
+            "precioUnitario": 45000.00,
+            "subtotal": 90000.00
+        }
+    ]
+}
+
