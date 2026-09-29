@@ -67,3 +67,12 @@ Este documento centraliza los hallazgos técnicos, decisiones arquitectónicas y
 * **Causa Raíz:** El servicio o contenedor Docker de PostgreSQL no estaba corriendo en segundo plano al momento de desplegar la migración.
 * **Solución:** Iniciar el servicio o contenedor de PostgreSQL (ej. `docker compose up -d` o `podman start`) antes de ejecutar el comando de actualización de base de datos.
 * **Lección Aprendida:** El proceso de migración de EF Core valida físicamente el esquema ejecutando comandos SQL en vivo; la infraestructura debe estar operativa antes de correr comandos del CLI de `dotnet ef`.
+
+Lección Aprendida #6 — Arquitectura de Excepciones y Observabilidad:
+
+Manejo de Errores vs Control de Flujo: Las capas de servicio deben comunicar situaciones anómalas (como recursos inexistentes) mediante excepciones de dominio/infraestructura (KeyNotFoundException, InvalidOperationException). El middleware HTTP se encarga de traducirlas a códigos de estado (404, 400, 500).
+
+Logging Estructurado: Evitar la concatenación de strings ("Error en " + id). Usar plantillas semánticas ("Error en {ProductoId}", id) para preservar la tipografía de las variables en los motores de analítica de logs.
+
+Encapsulamiento y Contratos: Un compilador configurado de forma estricta (CS1591 / <GenerateDocumentationFile>) previene vacíos de documentación y asegura la calidad del código desde el inicio.
+

@@ -1,9 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+	  <GenerateDocumentationFile>true</GenerateDocumentationFile>
+	  <!-- Opcional: Si quieres que la falta de documentación sea un ERROR de compilación (estricto) -->
+	  <!-- <WarningsAsErrors>CS1591</WarningsAsErrors> -->
   </PropertyGroup>
 
   <ItemGroup>

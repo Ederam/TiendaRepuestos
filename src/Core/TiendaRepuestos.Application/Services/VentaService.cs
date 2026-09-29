@@ -1,5 +1,6 @@
 namespace TiendaRepuestos.Application.Services;
 
+using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -16,16 +17,22 @@ public class VentaService
 {
     private readonly IVentaRepository _ventaRepository;
     private readonly IProductoRepository _productoRepository;
+    private readonly ILogger<VentaService> _logger;
 
     /// <summary>
     /// Inicializa una nueva instancia de <see cref="VentaService"/>.
     /// </summary>
     /// <param name="ventaRepository">Puerto para el almacenamiento de ventas.</param>
     /// <param name="productoRepository">Puerto para el almacenamiento y actualización de repuestos.</param>
-    public VentaService(IVentaRepository ventaRepository, IProductoRepository productoRepository)
+    /// <param name="logger">Servicio de registro estructurado de eventos.</param>
+    public VentaService(
+        IVentaRepository ventaRepository,
+        IProductoRepository productoRepository,
+        ILogger<VentaService> logger)
     {
         _ventaRepository = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _productoRepository = productoRepository ?? throw new ArgumentNullException(nameof(productoRepository));
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
@@ -57,8 +64,10 @@ public class VentaService
     /// <param name="dto">Datos del comprobante e ítems a vender.</param>
     /// <param name="cancellationToken">Token de cancelación de la tarea.</param>
     /// <returns>El DTO de la venta procesada con sus subtotales e impuestos calculados.</returns>
-    /// <exception cref="ArgumentException">Se lanza si no hay ítems o si la información básica de la venta es inválida.</exception>
-    /// <exception cref="InvalidOperationException">Se lanza si el repuesto no existe o no cuenta con stock suficiente.</exception>
+    /// <exception cref="ArgumentNullException">Se lanza si el DTO provisto es nulo.</exception>
+    /// <exception cref="ArgumentException">Se lanza si la lista de detalles viene vacía.</exception>
+    /// <exception cref="KeyNotFoundException">Se lanza si alguno de los repuestos solicitados no existe.</exception>
+    /// <exception cref="InvalidOperationException">Se lanza si no hay suficiente stock para cubrir la venta.</exception>
     public async Task<VentaResponseDto> CrearVentaAsync(CrearVentaDto dto, CancellationToken cancellationToken = default)
     {
         if (dto == null)
@@ -67,31 +76,40 @@ public class VentaService
         if (dto.Detalles == null || !dto.Detalles.Any())
             throw new ArgumentException("La venta debe contener al menos un producto.", nameof(dto.Detalles));
 
+        _logger.LogInformation("Iniciando procesamiento de la venta con comprobante: {NumeroComprobante}", dto.NumeroComprobante);
+
         Venta nuevaVenta = new Venta(dto.NumeroComprobante, dto.MetodoPago);
 
         foreach (CrearDetalleVentaDto item in dto.Detalles)
         {
             Producto? producto = await _productoRepository.GetByIdAsync(item.ProductoId, cancellationToken);
+
             if (producto == null)
             {
-                throw new InvalidOperationException($"No se encontró el repuesto con ID: {item.ProductoId}");
+                _logger.LogWarning("Intento de venta fallido. Producto con ID {ProductoId} no existe.", item.ProductoId);
+                throw new KeyNotFoundException($"No se encontró el repuesto con ID: {item.ProductoId}");
             }
 
             if (producto.StockActual < item.Cantidad)
             {
+                _logger.LogWarning("Stock insuficiente para el repuesto '{NombreProducto}' (ID: {ProductoId}). Requerido: {CantidadSolicitada}, Disponible: {StockActual}",
+                    producto.Nombre, producto.Id, item.Cantidad, producto.StockActual);
+
                 throw new InvalidOperationException(
                     $"Stock insuficiente para el repuesto '{producto.Nombre}'. Disponible: {producto.StockActual}, Solicitado: {item.Cantidad}");
             }
 
-            // Descuento de inventario en el agregado del producto
+            // Descuento de inventario respetando el encapsulamiento del Agregado
             producto.AjustarStock(-item.Cantidad);
             await _productoRepository.UpdateAsync(producto, cancellationToken);
 
-            // Agregar el detalle calculando subtotal e IVA
+            // Agregar detalle calculando subtotal e IVA a través del método de dominio
             nuevaVenta.AgregarDetalle(producto.Id, producto.Nombre, item.Cantidad, producto.PrecioVenta);
         }
 
         await _ventaRepository.AddAsync(nuevaVenta, cancellationToken);
+
+        _logger.LogInformation("Venta {NumeroComprobante} registrada exitosamente con Total: {TotalVenta}", nuevaVenta.NumeroComprobante, nuevaVenta.Total);
 
         return VentaResponseDto.FromEntity(nuevaVenta);
     }

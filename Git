@@ -55,3 +55,8 @@ git commit -m "feat(ventas): implementa agregado de ventas, reduccion de stock, 
 
 # 4. Enviar a repositorio remoto (si aplica)
 git push
+
+git status
+git add .
+git commit -m "feat(observability): middleware global de excepciones rfc7807, logging estructurado y comentarios xml"
+git push

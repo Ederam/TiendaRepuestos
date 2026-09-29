@@ -12,11 +12,15 @@ using TiendaRepuestos.Application.Services;
 /// Endpoints para la gestión y consulta de repuestos del inventario.
 /// </summary>
 [ApiController]
-[Route("api/[controller]")]
-public class ProductosController : ControllerBase
+[Route("api/[controller]")]public class ProductosController : ControllerBase
 {
     private readonly ProductoService _productoService;
 
+    /// <summary>
+    /// Inicializa una nueva instancia del controlador de productos con el servicio de aplicación correspondiente.   
+    /// </summary>
+    /// <param name="productoService"></param>
+    /// <exception cref="ArgumentNullException"></exception>
     public ProductosController(ProductoService productoService)
     {
         _productoService = productoService ?? throw new ArgumentNullException(nameof(productoService));

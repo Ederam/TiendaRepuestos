@@ -378,3 +378,14 @@ Response
     ]
 }
 
+docker ps
+
+docker compose up -d
+
+Response  ajustado
+{
+  "title": "Recurso no encontrado",
+  "status": 404,
+  "detail": "No se encontró el repuesto con ID: 8c2bf51d-5d80-425f-84d0-b7e3f1679999",
+  "instance": "/api/Ventas"
+}
