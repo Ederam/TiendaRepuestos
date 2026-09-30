@@ -76,3 +76,37 @@ Logging Estructurado: Evitar la concatenación de strings ("Error en " + id). Us
 
 Encapsulamiento y Contratos: Un compilador configurado de forma estricta (CS1591 / <GenerateDocumentationFile>) previene vacíos de documentación y asegura la calidad del código desde el inicio.
 
+📄 Lección Aprendida #7 — Validaciones Declarativas y Pipeline con FluentValidation
+1. Separación de Responsabilidades (SRP): Las reglas sobre el formato y presencia de datos de entrada deben vivir en validadores dedicados (AbstractValidator<T>) y no en los servicios de aplicación ni en los controladores HTTP.
+
+2. Escaneo por Reflexión: Registrar validadores con services.AddValidatorsFromAssembly(...) elimina la necesidad de registrar cada validador manualmente cuando el proyecto crece.
+
+3. Excepciones Estandarizadas de Entrada: Ejecutar .ValidateAndThrowAsync() permite interrumpir el flujo inmediatamente ante datos corruptos o incompletos, delegando la respuesta HTTP 400 (Bad Request) al middleware global bajo la especificación RFC 7807 (ProblemDetails).
+
+🛠️ Guía Rápida de Reutilización para Proyectos .NET
+Instalar paquete NuGet:
+
+PowerShell
+dotnet add package FluentValidation.DependencyInjectionExtensions
+Crear Validador:
+
+C#
+public class MiDtoValidator : AbstractValidator<MiDto> 
+{
+    public MiDtoValidator() 
+    {
+        RuleFor(x => x.Propiedad).NotEmpty().WithMessage("Mensaje de error");
+    }
+}
+Registrar en IoC (DependencyInjection.cs):
+
+C#
+services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+Capturar ValidationException en Middleware:
+
+C#
+case ValidationException valEx:
+    var errors = valEx.Errors
+        .GroupBy(e => e.PropertyName)
+        .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
+    // Crear HttpValidationProblemDetails con el diccionario de errores

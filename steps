@@ -389,3 +389,7 @@ Response  ajustado
   "detail": "No se encontró el repuesto con ID: 8c2bf51d-5d80-425f-84d0-b7e3f1679999",
   "instance": "/api/Ventas"
 }
+
+Agregar el Paquete NuGet de FluentValidation
+dotnet add src/Core/TiendaRepuestos.Application package FluentValidation.DependencyInjectionExtensions
+

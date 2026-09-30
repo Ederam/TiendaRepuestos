@@ -1,0 +1,77 @@
+crear producto asociado a la categoria reciuen creada
+{
+    "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+    "codigoParte": "04465-0K020",
+    "precioVenta": 185000.00,
+    "stockInicial": 25,
+    "stockMinimo": 5,
+    "estado": 0,
+    "categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
+}
+Response
+{
+    "id": "b9c88998-e502-4d44-888a-b529ab74e147",
+    "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+    "codigoParte": "04465-0K020",
+    "precioVenta": 185000,
+    "stockActual": 25,
+    "estado": "0",
+    "activo": true
+}
+curl para crear producto
+curl -X 'POST' \
+  'https: //localhost:7298/api/Productos' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+    "codigoParte": "04465-0K020",
+    "precioVenta": 185000.00,
+    "stockInicial": 25,
+    "stockMinimo": 5,
+    "estado": 0,
+    "categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
+}'
+
+Consulta de productos
+curl -X 'GET' \
+  'https: //localhost:7298/api/Productos' \
+  -H 'accept: text/plain'
+
+Crear Venta
+{
+    "numeroComprobante": "VTA-0001",
+    "metodoPago": 1,
+    "detalles": [
+        {
+            "productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
+            "cantidad": 2
+        }
+    ]
+}
+
+Prueba insercion de categoria
+Body
+{
+    "nombre": "Frenos y Suspensión",
+    "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
+}
+
+Response correcta
+{
+    "id": "6a832806-2a9c-48c7-83c2-1cdc385d3744",
+    "nombre": "Frenos y Suspensión",
+    "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado",
+    "activa": true
+}
+curl utilizado
+'https: //localhost:7298/api/Categorias' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "nombre": "Frenos y Suspensión",
+    "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
+}'
+
+
+

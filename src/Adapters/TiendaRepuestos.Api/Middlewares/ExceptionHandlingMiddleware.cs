@@ -1,13 +1,15 @@
 ﻿namespace TiendaRepuestos.Api.Middlewares;
 
-using System;
-using System.Collections.Generic;
-using System.Net;
-using System.Text.Json;
-using System.Threading.Tasks;
+using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
+using System.Text.Json;
+using System.Threading.Tasks;
 
 /// <summary>
 /// Middleware global para la captura y procesamiento unificado de excepciones no controladas en la API.
@@ -59,9 +61,21 @@ public class ExceptionHandlingMiddleware
 
         HttpStatusCode statusCode;
         string title;
+        IDictionary<string, string[]>? validationErrors = null;
 
         switch (exception)
         {
+            case ValidationException valEx:
+                statusCode = HttpStatusCode.BadRequest;
+                title = "Error de validación en los datos de entrada";
+                validationErrors = valEx.Errors
+                    .GroupBy(e => e.PropertyName)
+                    .ToDictionary(
+                        g => g.Key,
+                        g => g.Select(e => e.ErrorMessage).ToArray()
+                    );
+                break;
+
             case InvalidOperationException:
                 statusCode = HttpStatusCode.BadRequest;
                 title = "Solicitud inválida";
@@ -80,15 +94,34 @@ public class ExceptionHandlingMiddleware
 
         context.Response.StatusCode = (int)statusCode;
 
-        ProblemDetails problemDetails = new ProblemDetails
-        {
-            Status = (int)statusCode,
-            Title = title,
-            Detail = exception.Message,
-            Instance = context.Request.Path
-        };
+        ProblemDetails problemDetails;
 
-        string jsonResponse = JsonSerializer.Serialize(problemDetails);
+        if (validationErrors != null)
+        {
+            problemDetails = new HttpValidationProblemDetails(validationErrors)
+            {
+                Status = (int)statusCode,
+                Title = title,
+                Detail = "Consulte la propiedad 'errors' para conocer los detalles del fallo.",
+                Instance = context.Request.Path
+            };
+        }
+        else
+        {
+            problemDetails = new ProblemDetails
+            {
+                Status = (int)statusCode,
+                Title = title,
+                Detail = exception.Message,
+                Instance = context.Request.Path
+            };
+        }
+
+        string jsonResponse = JsonSerializer.Serialize(problemDetails, new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        });
+
         return context.Response.WriteAsync(jsonResponse);
     }
 }
