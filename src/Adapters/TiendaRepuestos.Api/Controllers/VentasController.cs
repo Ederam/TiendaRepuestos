@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using TiendaRepuestos.Application.DTOs;
@@ -66,6 +67,7 @@ public class VentasController : ControllerBase
     /// <param name="dto">Datos requeridos para procesar la venta.</param>
     /// <param name="cancellationToken">Token de cancelación.</param>
     /// <returns>El comprobante generado con subtotales e impuestos.</returns>
+    [Authorize]
     [HttpPost]
     [ProducesResponseType(typeof(VentaResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

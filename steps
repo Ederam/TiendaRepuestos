@@ -439,3 +439,20 @@ New-Item -ItemType Directory -Path "tests/TiendaRepuestos.Application.Tests/Serv
 Remove-Item "tests/TiendaRepuestos.Application.Tests/UnitTest1.cs" -ErrorAction SilentlyContinue
 # Crear y agregar ela rchjivo de pruebas
 New-Item -ItemType File -Path "tests/TiendaRepuestos.Application.Tests/Services/VentaServiceTests.cs" -Force
+
+# Instalar Paquetes en TiendaRepuestos.Infrastructure y TiendaRepuestos.Api
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package Microsoft.IdentityModel.Tokens
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package System.IdentityModel.Tokens.Jwt
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package BCrypt.Net-Next
+
+dotnet add src/Adapters/TiendaRepuestos.Api package Microsoft.AspNetCore.Authentication.JwtBearer
+
+Crear y Aplicar la Migración
+Ejecuta en PowerShell:
+
+PowerShell
+dotnet ef migrations add AddModuloAutenticacionUsuarios --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
+
+# Instalar el paquete en el proyecto API
+dotnet add src/Adapters/TiendaRepuestos.Api package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.0

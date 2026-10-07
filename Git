@@ -70,3 +70,8 @@ git status
 git add .
 git commit -m "test(application): cobertura de pruebas unitarias para ventas con xunit, moq y fluentvalidation"
 git push
+
+git status
+git add .
+git commit -m "feat(security): implementacion completa de autenticacion jwt con bcrypt y autorizacion en swagger"
+git push

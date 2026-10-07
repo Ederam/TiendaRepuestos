@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using TiendaRepuestos.Domain.Ports;
+using TiendaRepuestos.Infrastructure.Authentication;
 using TiendaRepuestos.Infrastructure.Persistence;
 using TiendaRepuestos.Infrastructure.Persistence.Repositories;
 
@@ -17,6 +18,9 @@ public static class DependencyInjection
         services.AddScoped<IProductoRepository, ProductoRepository>();
         services.AddScoped<ICategoriaRepository, CategoriaRepository>();
         services.AddScoped<IVentaRepository, VentaRepository>(); // <-- AGREGADO
+        services.AddScoped<IUsuarioRepository, UsuarioRepository>();
+        services.AddScoped<IJwtGenerator, JwtGenerator>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

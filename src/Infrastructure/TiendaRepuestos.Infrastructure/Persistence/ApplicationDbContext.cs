@@ -17,12 +17,29 @@ public class ApplicationDbContext : DbContext
     }
 
     /// <summary>
-    /// Obtiene o establece el conjunto de datos de los productos/repuestos.
+    /// Conjunto de entidades de productos en inventario.
     /// </summary>
     public DbSet<Producto> Productos => Set<Producto>();
+
+    /// <summary>
+    /// Conjunto de entidades de categorías de repuestos.
+    /// </summary>
     public DbSet<Categoria> Categorias => Set<Categoria>();
+
+    /// <summary>
+    /// Conjunto de entidades de ventas generadas.
+    /// </summary>
     public DbSet<Venta> Ventas => Set<Venta>();
+
+    /// <summary>
+    /// Conjunto de entidades de detalles de venta.
+    /// </summary>
     public DbSet<DetalleVenta> DetallesVenta => Set<DetalleVenta>();
+
+    /// <summary>
+    /// Conjunto de entidades de usuarios para autenticación y autorización.
+    /// </summary>
+    public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     /// <summary>
     /// Configura las entidades del modelo aplicando todas las configuraciones Fluent API del ensamblado.

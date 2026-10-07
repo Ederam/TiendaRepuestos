@@ -85,6 +85,11 @@ public class ExceptionHandlingMiddleware
                 statusCode = HttpStatusCode.NotFound;
                 title = "Recurso no encontrado";
                 break;
+    
+            case UnauthorizedAccessException:
+                statusCode = HttpStatusCode.Unauthorized;
+                title = "Acceso no autorizado";
+                break;
 
             default:
                 statusCode = HttpStatusCode.InternalServerError;
