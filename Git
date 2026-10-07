@@ -60,3 +60,13 @@ git status
 git add .
 git commit -m "feat(observability): middleware global de excepciones rfc7807, logging estructurado y comentarios xml"
 git push
+
+git status
+git add .
+git commit -m "feat(validation): integración de fluentvalidation para dtos y mapeo rfc7807 en middleware"
+git push
+
+git status
+git add .
+git commit -m "test(application): cobertura de pruebas unitarias para ventas con xunit, moq y fluentvalidation"
+git push

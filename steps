@@ -393,3 +393,49 @@ Response  ajustado
 Agregar el Paquete NuGet de FluentValidation
 dotnet add src/Core/TiendaRepuestos.Application package FluentValidation.DependencyInjectionExtensions
 
+📊 Estado Actual del Proyecto
+Nuestra arquitectura ha quedado con un estándar profesional y muy sólido:
+
+[Cliente HTTP / Postman]
+       │
+       ▼
+[Controllers (API)]  ──(Petición HTTP)──► [ExceptionHandlingMiddleware]
+                                                │
+                                       (Si ocurre excepción)
+                                                │
+                                                ▼
+                                    [Respuesta RFC 7807 JSON]
+       │
+       ▼
+[VentaService (Application)]
+       │
+       ├──► [FluentValidation (IValidator<T>)]  ──► (Lanza ValidationException si falla)
+       │
+       ├──► [AjustarStock() (Domain Agregados)] ──► (Invariantes y Encapsulamiento)
+       │
+       └──► [IVentaRepository (Ports)]          ──► [PostgreSQL (Infrastructure)]
+
+dotnet run --project src/Adapters/TiendaRepuestos.Api
+
+dotnet run --project src/Adapters/TiendaRepuestos.Api --launch-profile https
+
+o
+
+dotnet run --project src/Adapters/TiendaRepuestos.Api --urls "https://localhost:7298;http://localhost:5117"
+
+# creacion del proyecto de pruebas xUnit y vincularlo a la solucion
+dotnet new xunit -o tests/TiendaRepuestos.Application.Tests
+# agraegar el nuevo poryecto a la solucion
+dotnet sln TiendaRepuestos.sln add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj
+# Referenciar el proyecto que se va a probar
+dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
+# Instalar librerias necesarias
+dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj package Moq
+dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj package FluentAssertions
+dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj package FluentValidation
+# Crear la estructura de carpetas para las pruebas de los servicios
+New-Item -ItemType Directory -Path "tests/TiendaRepuestos.Application.Tests/Services" -Force
+# Eliminar el archivo Unitest.cs creado por defecto
+Remove-Item "tests/TiendaRepuestos.Application.Tests/UnitTest1.cs" -ErrorAction SilentlyContinue
+# Crear y agregar ela rchjivo de pruebas
+New-Item -ItemType File -Path "tests/TiendaRepuestos.Application.Tests/Services/VentaServiceTests.cs" -Force

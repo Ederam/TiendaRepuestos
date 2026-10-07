@@ -110,3 +110,13 @@ case ValidationException valEx:
         .GroupBy(e => e.PropertyName)
         .ToDictionary(g => g.Key, g => g.Select(e => e.ErrorMessage).ToArray());
     // Crear HttpValidationProblemDetails con el diccionario de errores
+
+
+Lección Aprendida #8 — Aislamiento y Pruebas Unitarias en Capa Application:
+
+Alineación de SDKs en Soluciones Multi-Proyecto: Al crear nuevos proyectos de pruebas con la CLI (dotnet new xunit), verificar que la versión de .NET (TargetFramework) coincida con los proyectos del core (net8.0) para evitar incompatibilidades en el test runner.
+
+SUT y Aislamiento con Mocks: Probar el System Under Test (VentaService) simulando puertos (IVentaRepository, IProductoRepository) permite verificar reglas de negocio e invariantes de dominio en milisegundos sin depender de PostgreSQL ni Docker.
+
+Instancias Reales en Validadores: En pruebas de servicios de aplicación, utilizar la instancia concreta del validador (new CrearVentaDtoValidator()) en lugar de mockearlo asegura que la integración del pipeline de reglas fluya de punta a punta.
+
