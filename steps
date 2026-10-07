@@ -1,16 +1,20 @@
 # 1. Script de Inicialización (Terminal / PowerShell)
 
 # 1. Crear y navegar al directorio raíz
+
 New-Item -ItemType Directory -Force -Path "D:\ER-DEV\Repuestos"
 Set-Location -Path "D:\ER-DEV\Repuestos"
 
 # 2. Inicializar el repositorio Git
+
 git init
 
 # 3. Crear el archivo .gitignore profesional para .NET y Angular
+
 dotnet new gitignore
 
 # 4. Crear la estructura de carpetas
+
 New-Item -ItemType Directory -Force -Path "src/Core/TiendaRepuestos.Domain"
 New-Item -ItemType Directory -Force -Path "src/Core/TiendaRepuestos.Application"
 New-Item -ItemType Directory -Force -Path "src/Infrastructure/TiendaRepuestos.Infrastructure"
@@ -19,9 +23,11 @@ New-Item -ItemType Directory -Force -Path "tests/TiendaRepuestos.UnitTests"
 New-Item -ItemType Directory -Force -Path "docs"
 
 # 5. Crear la Solución .NET
+
 dotnet new sln --name TiendaRepuestos
 
 # 6. Crear los proyectos individuales (.NET 8)
+
 dotnet new classlib -o src/Core/TiendaRepuestos.Domain -f net8.0
 dotnet new classlib -o src/Core/TiendaRepuestos.Application -f net8.0
 dotnet new classlib -o src/Infrastructure/TiendaRepuestos.Infrastructure -f net8.0
@@ -29,6 +35,7 @@ dotnet new webapi -o src/Adapters/TiendaRepuestos.Api -f net8.0
 dotnet new xunit -o tests/TiendaRepuestos.UnitTests -f net8.0
 
 # 7. Agregar los proyectos a la Solución (.sln)
+
 dotnet sln add src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
 dotnet sln add src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
 dotnet sln add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj
@@ -36,27 +43,34 @@ dotnet sln add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj
 dotnet sln add tests/TiendaRepuestos.UnitTests/TiendaRepuestos.UnitTests.csproj
 
 # 8. Establecer las referencias entre capas (Regla de la Arquitectura Hexagonal)
+
 # Application -> Domain
+
 dotnet add src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj reference src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
 
 # Infrastructure -> Application + Domain
+
 dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
 dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj reference src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
 
 # Api -> Application + Infrastructure
+
 dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
 dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj reference src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj
 
 # UnitTests -> Domain + Application
+
 dotnet add tests/TiendaRepuestos.UnitTests/TiendaRepuestos.UnitTests.csproj reference src/Core/TiendaRepuestos.Domain/TiendaRepuestos.Domain.csproj
 dotnet add tests/TiendaRepuestos.UnitTests/TiendaRepuestos.UnitTests.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
 
 # 9. Limpiar archivos autogenerados innecesarios
+
 Remove-Item -Path "src/Core/TiendaRepuestos.Domain/Class1.cs" -ErrorAction SilentlyContinue
 Remove-Item -Path "src/Core/TiendaRepuestos.Application/Class1.cs" -ErrorAction SilentlyContinue
 Remove-Item -Path "src/Infrastructure/TiendaRepuestos.Infrastructure/Class1.cs" -ErrorAction SilentlyContinue
 
 # 10. Compilar la solución para verificar la correcta vinculación
+
 dotnet build
 
 New-Item -ItemType File -Force -Path "docs/LECCIONES_APRENDIDAS.md"
@@ -66,17 +80,21 @@ dotnet nuget locals all --clear
 Remove-Item -Path "$env:TEMP\*" -Recurse -Force -ErrorAction SilentlyContinue
 
 # 1. Restaurar dependencias e índice de NuGet
+
 dotnet restore
 
 # 2. Compilar la solución limpia
+
 dotnet build
 
 # 1. Paquetes para la capa de Infraestructura (Persistencia y Acceso a Datos)
-dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj package Npgsql.EntityFrameworkCore.PostgreSQL --version 8.0.*
-dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj package Microsoft.EntityFrameworkCore.Design --version 8.0.*
+
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj package Npgsql.EntityFrameworkCore.PostgreSQL --version 8.0._
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure/TiendaRepuestos.Infrastructure.csproj package Microsoft.EntityFrameworkCore.Design --version 8.0._
 
 # 2. Paquete en la API para poder ejecutar migraciones desde la terminal
-dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj package Microsoft.EntityFrameworkCore.Design --version 8.0.*
+
+dotnet add src/Adapters/TiendaRepuestos.Api/TiendaRepuestos.Api.csproj package Microsoft.EntityFrameworkCore.Design --version 8.0.\*
 
 Definición del Puerto del Repositorio (src/Core/TiendaRepuestos.Domain/Ports/IProductoRepository.cs)
 
@@ -103,26 +121,31 @@ docker version
 wsl --update
 
 Mover la ubicación de WSL / Docker a la unidad D
+
 # 1. Apagar WSL
+
 wsl --shutdown
 
 # 2. Exportar la distribución
+
 wsl --export docker-desktop D:\Docker\wsl-data\docker-desktop.tar
 
 # 3. Eliminar el registro antiguo del disco C:
+
 wsl --unregister docker-desktop
 
 # 4. Importar en la nueva ubicación del disco D:
+
 wsl --import docker-desktop D:\Docker\wsl-data D:\Docker\wsl-data\docker-desktop.tar --version 2
 
 # 5. Eliminar el archivo temporal
+
 Remove-Item D:\Docker\wsl-data\docker-desktop.tar
 
 Ejecuta el siguiente comando para verificar el estado:
 
 PowerShell
 wsl --list --verbose
-
 
 Limitar el uso de RAM para WSL 2 a 4 GB
 Crea un archivo llamado .wslconfig en la ruta C:\Users\CAMILO\.wslconfig con el siguiente contenido:
@@ -145,13 +168,17 @@ ejecutaremos el comando de Entity Framework Core para crear la base de datos pos
 dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
 Reinicio del Contenedor y Limpieza de Volumen
+
 # 1. Detener el contenedor y eliminar el volumen persistente previo
+
 docker compose down -v
 
 # 2. Recrear el contenedor con la configuración actualizada
+
 docker compose up -d
 
 # 3. Verificar que el contenedor esté en estado Up
+
 docker ps
 
 Ejecución de la Migración
@@ -164,33 +191,35 @@ dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastru
 Para evitar conflictos entre el PostgreSQL de Windows y el de Docker, cambiaremos el puerto externo del contenedor a 5433.
 
 services:
-  postgres-db:
-    image: postgres:16-alpine
-    container_name: tienda_repuestos_db
-    environment:
-      POSTGRES_DB: pos_repuestos_db
-      POSTGRES_USER: dev_user
-      POSTGRES_PASSWORD: DevPassword123!
-    ports:
-      - "5433:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
+postgres-db:
+image: postgres:16-alpine
+container_name: tienda_repuestos_db
+environment:
+POSTGRES_DB: pos_repuestos_db
+POSTGRES_USER: dev_user
+POSTGRES_PASSWORD: DevPassword123!
+ports: - "5433:5432"
+volumes: - postgres_data:/var/lib/postgresql/data
 
 volumes:
-  postgres_data:
+postgres_data:
 
 Recrear el Contenedor y Probar la Migración
+
 # 1. Reiniciar el contenedor con el nuevo puerto
+
 docker compose down -v
 docker compose up -d
 
 # 2. Verificar que mapee el puerto 5433
+
 docker ps
 
 # 3. Aplicar la migración
+
 dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
-Conexion   a la build
+Conexion a la build
 TiendaRepuestos-Local
 localhost ó 127.0.0.1
 5433
@@ -200,15 +229,15 @@ postgres
 Recuento de la estructura del proyecto
 TiendaRepuestos/
 ├── src/
-│   ├── Core/
-│   │   ├── TiendaRepuestos.Domain/         (Capa 1: Dominio)
-│   │   └── TiendaRepuestos.Application/    (Capa 2: Aplicación)
-│   ├── Infrastructure/
-│   │   └── TiendaRepuestos.Infrastructure/ (Capa 3: Infraestructura)
-│   └── Adapters/
-│       └── TiendaRepuestos.Api/            (Capa 4: Adaptador API)
+│ ├── Core/
+│ │ ├── TiendaRepuestos.Domain/ (Capa 1: Dominio)
+│ │ └── TiendaRepuestos.Application/ (Capa 2: Aplicación)
+│ ├── Infrastructure/
+│ │ └── TiendaRepuestos.Infrastructure/ (Capa 3: Infraestructura)
+│ └── Adapters/
+│ └── TiendaRepuestos.Api/ (Capa 4: Adaptador API)
 └── tests/
-    └── TiendaRepuestos.UnitTests/          (Pruebas Unitarias)
+└── TiendaRepuestos.UnitTests/ (Pruebas Unitarias)
 
     encender el contenedor
     docker compose up -d
@@ -223,27 +252,34 @@ Para actualizar PostgreSQL en Docker con la nueva tabla Categorias:
 PowerShell
 dotnet ef migrations add AddCategoriasTable --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
-dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --s    
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --s
 
 Levantar el contenedor de PostgreSQL
+
 # Verificar si el contenedor está corriendo o detenido
+
 docker ps -a
 
 # Si el contenedor está detenido, inícialo (o usa el nombre/ID de tu contenedor)
+
 docker start tienda_repuestos_db
 
 # O si utilizas Docker Compose desde la raíz
+
 docker compose up -d
 
-
 Levantar el contenedor de PostgreSQL
+
 # Listar todos los contenedores para identificar el nombre o ID exacto del de PostgreSQL
+
 docker ps -a
 
 # iniciar el contenedor
+
 docker start tienda_repuestos_db
 
 # Verificar que el puerto 5433 esté activo
+
 docker ps
 
 Migracion
@@ -256,67 +292,65 @@ Aplicar la migración en PostgreSQL
 
 Prueba insercion de categoria
 {
-  "nombre": "Frenos y Suspensión",
-  "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
+"nombre": "Frenos y Suspensión",
+"descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
 }
-
 
 Response correcta
 {
-  "id": "6a832806-2a9c-48c7-83c2-1cdc385d3744",
-  "nombre": "Frenos y Suspensión",
-  "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado",
-  "activa": true
+"id": "6a832806-2a9c-48c7-83c2-1cdc385d3744",
+"nombre": "Frenos y Suspensión",
+"descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado",
+"activa": true
 }
-  'https://localhost:7298/api/Categorias' \
-  -H 'accept: text/plain' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "nombre": "Frenos y Suspensión",
-  "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
+'https://localhost:7298/api/Categorias' \
+ -H 'accept: text/plain' \
+ -H 'Content-Type: application/json' \
+ -d '{
+"nombre": "Frenos y Suspensión",
+"descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
 }'
 
 crear producto asociado a la categoria reciuen creada
 {
-  "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
-  "codigoParte": "04465-0K020",
-  "precioVenta": 185000.00,
-  "stockInicial": 25,
-  "stockMinimo": 5,
-  "estado": 0,
-  "categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
+"nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+"codigoParte": "04465-0K020",
+"precioVenta": 185000.00,
+"stockInicial": 25,
+"stockMinimo": 5,
+"estado": 0,
+"categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
 }
 Producto creado
 
 {
-  "id": "b9c88998-e502-4d44-888a-b529ab74e147",
-  "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
-  "codigoParte": "04465-0K020",
-  "precioVenta": 185000,
-  "stockActual": 25,
-  "estado": "0",
-  "activo": true
+"id": "b9c88998-e502-4d44-888a-b529ab74e147",
+"nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+"codigoParte": "04465-0K020",
+"precioVenta": 185000,
+"stockActual": 25,
+"estado": "0",
+"activo": true
 }
 
 curl -X 'POST' \
-  'https://localhost:7298/api/Productos' \
-  -H 'accept: text/plain' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "nombre": "Pastillas de Freno Delanteras Toyota Hilux",
-  "codigoParte": "04465-0K020",
-  "precioVenta": 185000.00,
-  "stockInicial": 25,
-  "stockMinimo": 5,
-  "estado": 0,
-  "categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
+ 'https://localhost:7298/api/Productos' \
+ -H 'accept: text/plain' \
+ -H 'Content-Type: application/json' \
+ -d '{
+"nombre": "Pastillas de Freno Delanteras Toyota Hilux",
+"codigoParte": "04465-0K020",
+"precioVenta": 185000.00,
+"stockInicial": 25,
+"stockMinimo": 5,
+"estado": 0,
+"categoriaId": "6a832806-2a9c-48c7-83c2-1cdc385d3744"
 }'
 
 Consulta de productos
 curl -X 'GET' \
-  'https://localhost:7298/api/Productos' \
-  -H 'accept: text/plain'
-
+ 'https://localhost:7298/api/Productos' \
+ -H 'accept: text/plain'
 
 Estado de la Solución (Cierre del Sprint 2)
 [ Domain ] ────────► Entities (Producto, Categoria) + Ports (IProductoRepository, ICategoriaRepository)
@@ -339,55 +373,57 @@ reintento de migracion
 dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
 # iniciar el contenedor
+
 docker start tienda_repuestos_db
 
 # Verificar que el puerto 5433 esté activo
+
 docker ps
 
 Crear Venta
 {
-  "numeroComprobante": "VTA-0001",
-  "metodoPago": 1,
-  "detalles": [
-    {
-      "productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
-      "cantidad": 2
-    }
-  ]
+"numeroComprobante": "VTA-0001",
+"metodoPago": 1,
+"detalles": [
+{
+"productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
+"cantidad": 2
+}
+]
 }
 
 Response
 {
-    "id": "c0e7fbf5-f1dc-43ae-8adb-b0a7f48001b9",
-    "numeroComprobante": "VTA-0001",
-    "fechaVenta": "2026-09-25T02:33:07.7921703Z",
-    "metodoPago": "Efectivo",
-    "estado": "Completada",
-    "subtotal": 90000.00,
-    "impuesto": 17100.0000,
-    "total": 107100.0000,
-    "detalles": [
-        {
-            "id": "29ee9c61-cc40-478a-b27c-7d2127bf709f",
-            "productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
-            "nombreProducto": "Pastillas de Freno Chevrolet Spark GT",
-            "cantidad": 2,
-            "precioUnitario": 45000.00,
-            "subtotal": 90000.00
-        }
-    ]
+"id": "c0e7fbf5-f1dc-43ae-8adb-b0a7f48001b9",
+"numeroComprobante": "VTA-0001",
+"fechaVenta": "2026-09-25T02:33:07.7921703Z",
+"metodoPago": "Efectivo",
+"estado": "Completada",
+"subtotal": 90000.00,
+"impuesto": 17100.0000,
+"total": 107100.0000,
+"detalles": [
+{
+"id": "29ee9c61-cc40-478a-b27c-7d2127bf709f",
+"productoId": "8c2bf51d-5d80-425f-84d0-b7e3f167ad39",
+"nombreProducto": "Pastillas de Freno Chevrolet Spark GT",
+"cantidad": 2,
+"precioUnitario": 45000.00,
+"subtotal": 90000.00
+}
+]
 }
 
 docker ps
 
 docker compose up -d
 
-Response  ajustado
+Response ajustado
 {
-  "title": "Recurso no encontrado",
-  "status": 404,
-  "detail": "No se encontró el repuesto con ID: 8c2bf51d-5d80-425f-84d0-b7e3f1679999",
-  "instance": "/api/Ventas"
+"title": "Recurso no encontrado",
+"status": 404,
+"detail": "No se encontró el repuesto con ID: 8c2bf51d-5d80-425f-84d0-b7e3f1679999",
+"instance": "/api/Ventas"
 }
 
 Agregar el Paquete NuGet de FluentValidation
@@ -397,23 +433,23 @@ dotnet add src/Core/TiendaRepuestos.Application package FluentValidation.Depende
 Nuestra arquitectura ha quedado con un estándar profesional y muy sólido:
 
 [Cliente HTTP / Postman]
-       │
-       ▼
-[Controllers (API)]  ──(Petición HTTP)──► [ExceptionHandlingMiddleware]
-                                                │
-                                       (Si ocurre excepción)
-                                                │
-                                                ▼
-                                    [Respuesta RFC 7807 JSON]
-       │
-       ▼
+│
+▼
+[Controllers (API)] ──(Petición HTTP)──► [ExceptionHandlingMiddleware]
+│
+(Si ocurre excepción)
+│
+▼
+[Respuesta RFC 7807 JSON]
+│
+▼
 [VentaService (Application)]
-       │
-       ├──► [FluentValidation (IValidator<T>)]  ──► (Lanza ValidationException si falla)
-       │
-       ├──► [AjustarStock() (Domain Agregados)] ──► (Invariantes y Encapsulamiento)
-       │
-       └──► [IVentaRepository (Ports)]          ──► [PostgreSQL (Infrastructure)]
+│
+├──► [FluentValidation (IValidator<T>)] ──► (Lanza ValidationException si falla)
+│
+├──► [AjustarStock() (Domain Agregados)] ──► (Invariantes y Encapsulamiento)
+│
+└──► [IVentaRepository (Ports)] ──► [PostgreSQL (Infrastructure)]
 
 dotnet run --project src/Adapters/TiendaRepuestos.Api
 
@@ -424,23 +460,37 @@ o
 dotnet run --project src/Adapters/TiendaRepuestos.Api --urls "https://localhost:7298;http://localhost:5117"
 
 # creacion del proyecto de pruebas xUnit y vincularlo a la solucion
+
 dotnet new xunit -o tests/TiendaRepuestos.Application.Tests
+
 # agraegar el nuevo poryecto a la solucion
+
 dotnet sln TiendaRepuestos.sln add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj
+
 # Referenciar el proyecto que se va a probar
+
 dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj reference src/Core/TiendaRepuestos.Application/TiendaRepuestos.Application.csproj
+
 # Instalar librerias necesarias
+
 dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj package Moq
 dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj package FluentAssertions
 dotnet add tests/TiendaRepuestos.Application.Tests/TiendaRepuestos.Application.Tests.csproj package FluentValidation
+
 # Crear la estructura de carpetas para las pruebas de los servicios
+
 New-Item -ItemType Directory -Path "tests/TiendaRepuestos.Application.Tests/Services" -Force
+
 # Eliminar el archivo Unitest.cs creado por defecto
+
 Remove-Item "tests/TiendaRepuestos.Application.Tests/UnitTest1.cs" -ErrorAction SilentlyContinue
+
 # Crear y agregar ela rchjivo de pruebas
+
 New-Item -ItemType File -Path "tests/TiendaRepuestos.Application.Tests/Services/VentaServiceTests.cs" -Force
 
 # Instalar Paquetes en TiendaRepuestos.Infrastructure y TiendaRepuestos.Api
+
 dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package Microsoft.IdentityModel.Tokens
 dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package System.IdentityModel.Tokens.Jwt
 dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package BCrypt.Net-Next
@@ -455,4 +505,25 @@ dotnet ef migrations add AddModuloAutenticacionUsuarios --project src/Infrastruc
 dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api
 
 # Instalar el paquete en el proyecto API
+
 dotnet add src/Adapters/TiendaRepuestos.Api package Microsoft.AspNetCore.Authentication.JwtBearer --version 8.0.0
+
+# Trabajando con podman
+
+# Verificar el estado de la máquina Podman
+
+podman machine list
+
+podman machine init
+podman machine start
+
+cd "C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos"
+podman compose up -d
+
+# COnfirmar que el contenedor esta arriba
+
+podman ps
+
+# Comprueba que el motor de PostgreSQL esté listo para recibir peticiones:
+
+podman logs tienda_repuestos_db

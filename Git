@@ -1,30 +1,37 @@
 git add .
 git commit -m "chore: inicialización de la solución .NET 8 con arquitectura hexagonal y solución de espacio en disco"
 
-
 # 1. Asegurar que los cambios locales estén registrados en el commit
+
 git add .
 git commit -m "chore: inicialización de la solución .NET 8 con arquitectura hexagonal y solución de espacio en disco"
 
 # 2. Renombrar la rama principal a main (buena práctica)
+
 git branch -M main
 
 # 3. Vincular el repositorio local con GitHub (Reemplaza la URL)
+
 git remote add origin https://github.com/Ederam/TiendaRepuestos.git
 
 # 4. Subir la solución y la documentación a GitHub
+
 git push -u origin main
 
 # 1. Verificar el estado de los archivos modificados y creados
+
 git status
 
 # 2. Agregar los cambios al área de preparación (staging)
+
 git add .
 
 # 3. Guardar el commit con mensaje descriptivo (Conventional Commits)
+
 git commit -m "feat: configurado ApplicationDbContext con PostgreSQL, mapeo Fluent API para Producto y solucionado error de compilación CS0106"
 
 # 4. Subir los cambios a GitHub
+
 git push origin main
 
 git add .
@@ -36,24 +43,31 @@ git commit -m "feat: completada integración de API, controlador de productos e 
 git push origin main
 
 # 1. Verificar los archivos creados y modificados
+
 git status
 
 # 2. Agregar todos los cambios al área de preparación
+
 git add .
 
 # 3. Realizar el commit documentando las entregas del Sprint 2
+
 git commit -m "feat(categoria): implementa modulo completo de categorias y alineacion de stock minimo en productos"
 
 # 1. Inspeccionar archivos actualizados
+
 git status
 
 # 2. Agregar cambios
+
 git add .
 
 # 3. Guardar commit con la bitácora y el módulo de ventas
+
 git commit -m "feat(ventas): implementa agregado de ventas, reduccion de stock, controlador REST y bitacora ADR"
 
 # 4. Enviar a repositorio remoto (si aplica)
+
 git push
 
 git status
@@ -75,3 +89,20 @@ git status
 git add .
 git commit -m "feat(security): implementacion completa de autenticacion jwt con bcrypt y autorizacion en swagger"
 git push
+
+CLonacion del proyecto
+git clone https://github.com/Ederam/TiendaRepuestos.git
+
+# setear usuario
+
+# cd "C:\DEV_ER\Mis Archivos\Projects\TiendaRepuestos"
+
+git config --local user.name "Ederam"
+git config --local user.email "eramirezc1@ucentral.edu.co"
+
+# Verificar
+
+git config --local --get user.name
+git config --local --get user.email
+
+git config --list --show-origin | Select-String "user\.(name|email)"
