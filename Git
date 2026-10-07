@@ -106,3 +106,9 @@ git config --local --get user.name
 git config --local --get user.email
 
 git config --list --show-origin | Select-String "user\.(name|email)"
+
+# Cambiar la URL del remoto a SSH
+
+git remote set-url origin git@github.com:Ederam/TiendaRepuestos.git
+
+git push -u origin main

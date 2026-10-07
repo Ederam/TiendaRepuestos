@@ -73,5 +73,71 @@ curl utilizado
     "descripcion": "Pastillas, discos, amortiguadores y repuestos de frenado"
 }'
 
+https://localhost:7298/swagger/index.html).   
+// Ejecuta POST /api/Auth/registro con:JSON
+{
+  "nombreCompleto": "Camilo Ramirez",
+  "email": "camilo@repuestos.com",
+  "password": "Password123*",
+  "rol": 2
+}
 
+curl -X 'POST' \
+  'https://localhost:7298/api/Auth/registro' \
+  -H 'accept: text/plain' \
+  -H 'Content-Type: application/json' \
+  -d '{
+  "nombreCompleto": "Camilo Ramirez",
+  "email": "camilo@repuestos.com",
+  "password": "Password123*",
+  "rol": 2
+}'
+
+Response
+{
+  "id": "e1ee0fcf-cc52-4f50-8f47-175bb671f5c8",
+  "nombreCompleto": "Camilo Ramirez",
+  "email": "camilo@repuestos.com",
+  "rol": "Administrador",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMWVlMGZjZi1jYzUyLTRmNTAtOGY0Ny0xNzViYjY3MWY1YzgiLCJlbWFpbCI6ImNhbWlsb0ByZXB1ZXN0b3MuY29tIiwibmFtZSI6IkNhbWlsbyBSYW1pcmV6IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc5MTQxNzg2NywiaXNzIjoiVGllbmRhUmVwdWVzdG9zQXBpIiwiYXVkIjoiVGllbmRhUmVwdWVzdG9zQ2xpZW50cyJ9.npUOypg7z-Mh7vZlZl7Pf-hwfHEC4Pqf3smTxbLbHXY"
+}
+
+Venta Creada
+curl -X 'POST' \
+  'https://localhost:7298/api/Ventas' \
+  -H 'accept: text/plain' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMWVlMGZjZi1jYzUyLTRmNTAtOGY0Ny0xNzViYjY3MWY1YzgiLCJlbWFpbCI6ImNhbWlsb0ByZXB1ZXN0b3MuY29tIiwibmFtZSI6IkNhbWlsbyBSYW1pcmV6IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc5MTQxNzg2NywiaXNzIjoiVGllbmRhUmVwdWVzdG9zQXBpIiwiYXVkIjoiVGllbmRhUmVwdWVzdG9zQ2xpZW50cyJ9.npUOypg7z-Mh7vZlZl7Pf-hwfHEC4Pqf3smTxbLbHXY' \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "numeroComprobante": "VTA-0010",
+    "metodoPago": 2,
+    "detalles": [
+        {
+            "productoId": "c08ecce2-1d06-405d-834a-b015469c4fea",
+            "cantidad": 3
+        }
+    ]
+}'
+
+Response
+{
+  "id": "333975d1-da8b-450b-a8f5-6c35e27a8b20",
+  "numeroComprobante": "VTA-0010",
+  "fechaVenta": "2026-10-07T22:40:39.4565445Z",
+  "metodoPago": "TarjetaDebito",
+  "estado": "Completada",
+  "subtotal": 360000,
+  "impuesto": 68400,
+  "total": 428400,
+  "detalles": [
+    {
+      "id": "0e69f577-c807-4a57-8c1c-41acaedbe96b",
+      "productoId": "c08ecce2-1d06-405d-834a-b015469c4fea",
+      "nombreProducto": "Kit Pastillas de Freno Delanteras",
+      "cantidad": 3,
+      "precioUnitario": 120000,
+      "subtotal": 360000
+    }
+  ]
+}
 

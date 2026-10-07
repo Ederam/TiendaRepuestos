@@ -527,3 +527,30 @@ podman ps
 # Comprueba que el motor de PostgreSQL esté listo para recibir peticiones:
 
 podman logs tienda_repuestos_db
+
+# Asegurar que el contenedor de Docker esté activo
+
+En tu terminal de PowerShell en D:\ER-DEV\Repuestos:
+
+PowerShell
+docker compose up -d
+podman compose up -d
+
+# Aplicar todas las migraciones a PostgreSQL
+
+Ejecuta el comando forzando la actualización de la base de datos desde la raíz del proyecto:
+
+PowerShell
+dotnet ef database update --project src/Infrastructure/TiendaRepuestos.Infrastructure --startup-project src/Adapters/TiendaRepuestos.Api --verbose
+
+# Confirma que esté escuchando en el puerto 5433:
+
+PowerShell
+podman ps
+
+# Instalar o Restaurar dotnet-ef Globalmente
+
+Para corregir el error dotnet-ef no existe, instala la herramienta global ejecutando:
+
+PowerShell
+dotnet tool install --global dotnet-ef
