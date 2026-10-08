@@ -554,3 +554,5 @@ Para corregir el error dotnet-ef no existe, instala la herramienta global ejecut
 
 PowerShell
 dotnet tool install --global dotnet-ef
+
+New-Item -ItemType File -Path "tests/TiendaRepuestos.Application.Tests/Services/AuthServiceTests.cs" -Force

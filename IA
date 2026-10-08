@@ -1,0 +1,11 @@
+# Prompt sugerido sin copiar todo los archivos de documentacion
+
+"Actualicemos la lección aprendida #9 y el archivo Git para el commit de RBAC"
+
+# Estructura ideal de un prompt conciso:
+
+Objetivo: Ajustar RBAC en ProductosController y limpiar try-catches.
+
+Ruta y Archivo: (El código que necesitas modificar).
+
+Salida esperada: Código completo para reemplazar y resumen de cambios.

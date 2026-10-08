@@ -139,3 +139,13 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 
 - **Eliminación de Redundancia:** Capturar manualmente excepciones (`KeyNotFoundException`, `InvalidOperationException`) dentro de cada método de un controlador genera código repetitivo y viola el principio DRY.
 - **Centralización:** Delegar el flujo de error al `ExceptionHandlingMiddleware` asegura que todas las respuestas de error respeten la especificación RFC 7807 (`ProblemDetails`) con tipado uniforme en toda la API.
+
+### ADR-006: Centralización de Roles Mediante Constantes Tipadas
+
+- **Contexto:** El uso recurrente de cadenas de texto literales ("Administrador", "Vendedor") en atributos `[Authorize(Roles = ...)]` genera fragilidad ante errores tipográficos.
+- **Decisión:** Declarar la clase estática `Roles` en `TiendaRepuestos.Domain.Constants` con valores constantes evaluados en tiempo de compilación.
+- **Consecuencia:** Detección de errores en compilación, soporte de autocompletado en el IDE y un único punto de cambio para directivas de seguridad.
+
+### Lección Aprendida #10 — Cobertura Unitaria de Autenticación y Autorización
+
+- **Pruebas sin Servidores Criptográficos Reales:** Simular los puertos `IPasswordHasher` e `IJwtGenerator` con `Moq` permite probar exhaustivamente los casos de negocio de acceso (usuarios inactivos, contraseñas erróneas, correos duplicados) sin sobrecoste de CPU ni dependencias externas.

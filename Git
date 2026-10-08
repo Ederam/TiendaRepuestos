@@ -117,3 +117,8 @@ git status
 git add .
 git commit -m "feat(security): implementa rbac en controladores de productos y ventas y depuracion rfc7807"
 git push
+
+git status
+git add .
+git commit -m "test(auth): suite completa de pruebas unitarias para authservice y constantes tipadas de roles"
+git push
