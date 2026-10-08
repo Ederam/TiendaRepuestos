@@ -1,8 +1,8 @@
 {
   "info": {
-    "_postman_id": "c1f7b992-a1b2-4d8e-b5c4-7a3b4e5d6f78",
-    "name": "Tienda Repuestos - Auth & POS API",
-    "description": "Colección de pruebas para autenticación JWT, RFC 7807 y endpoints protegidos.",
+    "_postman_id": "9b1c7a4e-33f2-4a81-9b1e-62e987c0a1b2",
+    "name": "Tienda Repuestos API - Clean Architecture",
+    "description": "Colección completa con autenticación JWT, RBAC (Vendedor / Administrador) y pruebas RFC 7807.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -12,28 +12,27 @@
       "type": "string"
     },
     {
-      "key": "bearer_token",
+      "key": "token_admin",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token_vendedor",
       "value": "",
       "type": "string"
     }
   ],
   "item": [
     {
-      "name": "01. Auth",
+      "name": "01. Autenticación (Auth)",
       "item": [
         {
-          "name": "1.1 Registro Usuario (Admin)",
+          "name": "1.1 Registro Usuario Admin",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -47,18 +46,12 @@
           }
         },
         {
-          "name": "1.2 Registro Usuario (Vendedor)",
+          "name": "1.2 Registro Usuario Vendedor",
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -72,16 +65,16 @@
           }
         },
         {
-          "name": "1.3 Login Exitoso (Captura Token)",
+          "name": "1.3 Login Admin (Guarda token_admin)",
           "event": [
             {
               "listen": "test",
               "script": {
                 "exec": [
                   "if (pm.response.code === 200) {",
-                  "    var data = pm.response.json();",
-                  "    pm.collectionVariables.set('bearer_token', data.token);",
-                  "    console.log('Token guardado en variable bearer_token');",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token_admin', json.token);",
+                  "    console.log('token_admin actualizado exitosamente');",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -91,14 +84,8 @@
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
@@ -112,127 +99,146 @@
           }
         },
         {
-          "name": "1.4 Login Fallido - Password Erróneo",
+          "name": "1.4 Login Vendedor (Guarda token_vendedor)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "if (pm.response.code === 200) {",
+                  "    var json = pm.response.json();",
+                  "    pm.collectionVariables.set('token_vendedor', json.token);",
+                  "    console.log('token_vendedor actualizado exitosamente');",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"email\": \"camilo@repuestos.com\",\n  \"password\": \"PasswordIncorrecto\"\n}"
+              "raw": "{\n  \"email\": \"vendedor@repuestos.com\",\n  \"password\": \"Venta2026*\"\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/Auth/login",
               "host": ["{{base_url}}"],
               "path": ["api", "Auth", "login"]
-            }
-          }
-        },
-        {
-          "name": "1.5 Login Fallido - Email No Registrado",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"inexistente@repuestos.com\",\n  \"password\": \"Password123*\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/Auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["api", "Auth", "login"]
-            }
-          }
-        },
-        {
-          "name": "1.6 Registro Fallido - Email Duplicado",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombreCompleto\": \"Camilo Ramirez\",\n  \"email\": \"camilo@repuestos.com\",\n  \"password\": \"Password123*\",\n  \"rol\": 2\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/Auth/registro",
-              "host": ["{{base_url}}"],
-              "path": ["api", "Auth", "registro"]
-            }
-          }
-        },
-        {
-          "name": "1.7 Registro Fallido - Validación FluentValidation",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"nombreCompleto\": \"\",\n  \"email\": \"correo_invalido\",\n  \"password\": \"123\",\n  \"rol\": 99\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/Auth/registro",
-              "host": ["{{base_url}}"],
-              "path": ["api", "Auth", "registro"]
             }
           }
         }
       ]
     },
     {
-      "name": "02. Ventas (Endpoints Protegidos)",
+      "name": "02. Productos (RBAC)",
       "item": [
         {
-          "name": "2.1 Crear Venta Sin Token (Debe dar 401)",
+          "name": "2.1 Listar Productos (Permitido a Vendedor)",
           "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_vendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [{ "key": "Accept", "value": "application/json" }],
+            "url": {
+              "raw": "{{base_url}}/api/Productos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "Productos"]
+            }
+          }
+        },
+        {
+          "name": "2.2 Crear Producto con Admin (Permitido 201)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                { "key": "token", "value": "{{token_admin}}", "type": "string" }
+              ]
+            },
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"numeroComprobante\": \"VTA-0001\",\n  \"metodoPago\": 1,\n  \"detalles\": [\n    {\n      \"productoId\": \"8c2bf51d-5d80-425f-84d0-b7e3f1699999\",\n      \"cantidad\": 1\n    }\n  ]\n}"
+              "raw": "{\n  \"nombre\": \"Pastillas de Freno Chevrolet Spark GT\",\n  \"codigoParte\": \"PF-SPK-001\",\n  \"precioVenta\": 45000.00,\n  \"stockInicial\": 30,\n  \"stockMinimo\": 5,\n  \"estado\": 0,\n  \"categoriaId\": \"6a832806-2a9c-48c7-83c2-1cdc385d3744\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/Productos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "Productos"]
+            }
+          }
+        },
+        {
+          "name": "2.3 Crear Producto con Vendedor (Debe dar 403 Forbidden)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_vendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nombre\": \"Intento no autorizado de repuesto\",\n  \"codigoParte\": \"NO-AUTH\",\n  \"precioVenta\": 10000.00,\n  \"stockInicial\": 1,\n  \"stockMinimo\": 1,\n  \"estado\": 0,\n  \"categoriaId\": \"6a832806-2a9c-48c7-83c2-1cdc385d3744\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/Productos",
+              "host": ["{{base_url}}"],
+              "path": ["api", "Productos"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "03. Ventas (POS)",
+      "item": [
+        {
+          "name": "3.1 Crear Venta con Token Vendedor (Permitido)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token_vendedor}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"numeroComprobante\": \"VTA-0011\",\n  \"metodoPago\": 1,\n  \"detalles\": [\n    {\n      \"productoId\": \"c08ecce2-1d06-405d-834a-b015469c4fea\",\n      \"cantidad\": 1\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/Ventas",
@@ -242,67 +248,16 @@
           }
         },
         {
-          "name": "2.2 Crear Venta Con Token Válido",
+          "name": "3.2 Crear Venta Sin Token (Debe dar 401 Unauthorized)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{bearer_token}}",
-                  "type": "string"
-                }
-              ]
-            },
             "method": "POST",
             "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"numeroComprobante\": \"VTA-0001\",\n  \"metodoPago\": 1,\n  \"detalles\": [\n    {\n      \"productoId\": \"8c2bf51d-5d80-425f-84d0-b7e3f1699999\",\n      \"cantidad\": 1\n    }\n  ]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/api/Ventas",
-              "host": ["{{base_url}}"],
-              "path": ["api", "Ventas"]
-            }
-          }
-        },
-        {
-          "name": "2.3 Crear Venta Con Token Inválido / Alterado",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.tokenFalsoInvalido.firmaFalsa",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Accept",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"numeroComprobante\": \"VTA-0001\",\n  \"metodoPago\": 1,\n  \"detalles\": [\n    {\n      \"productoId\": \"8c2bf51d-5d80-425f-84d0-b7e3f1699999\",\n      \"cantidad\": 1\n    }\n  ]\n}"
+              "raw": "{\n  \"numeroComprobante\": \"VTA-0012\",\n  \"metodoPago\": 1,\n  \"detalles\": [\n    {\n      \"productoId\": \"c08ecce2-1d06-405d-834a-b015469c4fea\",\n      \"cantidad\": 1\n    }\n  ]\n}"
             },
             "url": {
               "raw": "{{base_url}}/api/Ventas",

@@ -112,3 +112,8 @@ git config --list --show-origin | Select-String "user\.(name|email)"
 git remote set-url origin git@github.com:Ederam/TiendaRepuestos.git
 
 git push -u origin main
+
+git status
+git add .
+git commit -m "feat(security): implementa rbac en controladores de productos y ventas y depuracion rfc7807"
+git push
