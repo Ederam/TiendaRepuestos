@@ -3,6 +3,7 @@ namespace TiendaRepuestos.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using TiendaRepuestos.Application.Ports;
 using TiendaRepuestos.Domain.Ports;
 using TiendaRepuestos.Infrastructure.Authentication;
 using TiendaRepuestos.Infrastructure.Persistence;
@@ -21,6 +22,7 @@ public static class DependencyInjection
         services.AddScoped<IUsuarioRepository, UsuarioRepository>();
         services.AddScoped<IJwtGenerator, JwtGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddScoped<IReportesRepository, ReportesRepository>();
 
         return services;
     }

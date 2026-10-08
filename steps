@@ -556,3 +556,72 @@ PowerShell
 dotnet tool install --global dotnet-ef
 
 New-Item -ItemType File -Path "tests/TiendaRepuestos.Application.Tests/Services/AuthServiceTests.cs" -Force
+
+# Instalar el Paquete Dapper en Infraestructura
+
+Abre la terminal de PowerShell en la raíz (C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos) y ejecuta:
+
+PowerShell
+dotnet add src/Infrastructure/TiendaRepuestos.Infrastructure package Dapper
+
+# Crear los DTOs de Reportes en la Capa Application
+
+Crearemos los contratos de respuesta para dos reportes estratégicos:
+
+Stock Crítico: Repuestos cuyo StockActual <= StockMinimo.
+
+Top Productos Más Vendidos: Agrupación con total recaudado y unidades vendidas.
+
+Crea la carpeta y el archivo:
+
+PowerShell
+New-Item -ItemType Directory -Path "src/Core/TiendaRepuestos.Application/DTOs/Reportes" -Force
+New-Item -ItemType File -Path "src/Core/TiendaRepuestos.Application/DTOs/Reportes/ReporteStockCriticoDto.cs" -Force
+New-Item -ItemType File -Path "src/Core/TiendaRepuestos.Application/DTOs/Reportes/ReporteTopProductoDto.cs" -Force
+
+# Definir el Puerto de Consultas en Application
+
+En Clean Architecture, la interfaz de consultas de lectura pertenece a Application.
+
+Crea el archivo:
+
+PowerShell
+New-Item -ItemType Directory -Path "src/Core/TiendaRepuestos.Application/Ports" -Force
+New-Item -ItemType File -Path "src/Core/TiendaRepuestos.Application/Ports/IReportesRepository.cs" -Force
+
+# Implementar el Repositorio con Dapper en Infrastructure
+
+Crea el archivo de implementación:
+
+PowerShell
+New-Item -ItemType Directory -Path "src/Infrastructure/TiendaRepuestos.Infrastructure/Persistence/Repositories" -Force
+New-Item -ItemType File -Path "src/Infrastructure/TiendaRepuestos.Infrastructure/Persistence/Repositories/ReportesRepository.cs" -Force
+
+# Crear el Controlador ReportesController.cs
+
+Este controlador debe estar protegido con autorización exclusiva para Roles.Administrador.
+
+Crea el archivo:
+
+PowerShell
+New-Item -ItemType File -Path "src/Adapters/TiendaRepuestos.Api/Controllers/ReportesController.cs" -Force
+
+# GROUP BY de forma concreta
+
+Concepto: GROUP BY toma filas repetidas según las columnas indicadas y las colapsa en una sola fila de resumen para poder aplicar funciones de agregación matemática (SUM, COUNT, AVG, MAX, MIN).
+
+Ejemplo en nuestro caso:
+En la tabla detalles_venta, el producto Pastillas de Freno puede aparecer 50 veces (en 50 ventas distintas de 2 unidades cada una).
+
+SQL
+SELECT dv.nombre_producto, SUM(dv.cantidad)
+FROM detalles_venta dv
+GROUP BY dv.producto_id, dv.nombre_producto;
+GROUP BY agrupa esas 50 filas bajo el mismo nombre y SUM(dv.cantidad) totaliza las 100 unidades consolidadas.
+
+# Consultar los nombres exactos en PostgreSQL
+
+Ejecuta este comando en PowerShell para listar las tablas reales que EF Core creó en tu base de datos:
+
+PowerShell
+podman exec -it tienda_repuestos_db psql -U dev_user -d pos_repuestos_db -c "\dt"

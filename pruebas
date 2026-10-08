@@ -141,3 +141,10 @@ Response
   ]
 }
 
+GET /api/Reportes/stock-critico
+curl -X 'GET' \
+  'https://localhost:7298/api/Reportes/stock-critico' \
+  -H 'accept: text/plain' \
+  -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMWVlMGZjZi1jYzUyLTRmNTAtOGY0Ny0xNzViYjY3MWY1YzgiLCJlbWFpbCI6ImNhbWlsb0ByZXB1ZXN0b3MuY29tIiwibmFtZSI6IkNhbWlsbyBSYW1pcmV6IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc5MTUwMDgwNywiaXNzIjoiVGllbmRhUmVwdWVzdG9zQXBpIiwiYXVkIjoiVGllbmRhUmVwdWVzdG9zQ2xpZW50cyJ9.efm4NEGPNQUTM-2ohYqbumPMV8DO6UGPFvBbLGsuRPg'
+
+  
