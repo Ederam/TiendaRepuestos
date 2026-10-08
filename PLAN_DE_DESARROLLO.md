@@ -20,15 +20,16 @@
 
 ---
 
-### 🟡 Sprint 2: Seguridad, Validaciones y Reglas de Venta (90% AVANCE)
+### 🟢 Sprint 2: Seguridad, Validaciones, Reglas de Venta y RBAC (COMPLETADO)
 
-- [x] Validación declarativa con FluentValidation para DTOs.
-- [x] Pruebas unitarias de ventas con xUnit, Moq y FluentAssertions.
+- [x] Validación declarativa con FluentValidation para todos los DTOs de entrada.
+- [x] Agregado de ventas, cálculo de impuestos, totales y ajuste de stock transaccional.
+- [x] Cobertura de pruebas unitarias para `VentaService` (stock insuficiente, comprobante inválido, producto inexistente).
 - [x] Módulo de identidad y hashing seguro de contraseñas con BCrypt.
 - [x] Generación de tokens JWT y autenticación Bearer en pipeline HTTP.
 - [x] Integración de OpenAPI/Swagger con candado de autorización Bearer.
-- [x] Control de Acceso Basado en Roles (RBAC) aplicado a Productos y Ventas.
-- [ ] Pruebas unitarias para `AuthService` (Pendiente para cierre formal del Sprint 2).
+- [x] Control de Acceso Basado en Roles (RBAC) desacoplado en controladores mediante `Roles.cs`.
+- [x] Cobertura de pruebas unitarias para `AuthService` (login exitoso, credenciales erróneas, usuario inactivo, emails duplicados).
 
 ---
 

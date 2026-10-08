@@ -122,3 +122,8 @@ git status
 git add .
 git commit -m "test(auth): suite completa de pruebas unitarias para authservice y constantes tipadas de roles"
 git push
+
+git status
+git add .
+git commit -m "feat(sprint-2): cierre formal de sprint 2 con rbac tipado, pruebas unitarias de authservice y ventas"
+git push
