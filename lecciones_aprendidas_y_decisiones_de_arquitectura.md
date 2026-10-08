@@ -149,3 +149,9 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 ### Lección Aprendida #10 — Cobertura Unitaria de Autenticación y Autorización
 
 - **Pruebas sin Servidores Criptográficos Reales:** Simular los puertos `IPasswordHasher` e `IJwtGenerator` con `Moq` permite probar exhaustivamente los casos de negocio de acceso (usuarios inactivos, contraseñas erróneas, correos duplicados) sin sobrecoste de CPU ni dependencias externas.
+
+### ADR-007: Concurrencia Optimista con Token de Sistema 'xmin' en PostgreSQL
+
+- **Contexto:** En escenarios de alto volumen de ventas en mostrador, dos cajeros pueden intentar facturar existencias del mismo repuesto de forma simultánea, arriesgando sobreventas o inconsistencias de stock.
+- **Decisión:** Implementar concurrencia optimista utilizando `builder.UseXminAsConcurrencyToken()` de Npgsql/EF Core sobre la entidad `Producto`.
+- **Consecuencia:** Cero sobrecarga de columnas extras en la base de datos. Ante intentos simultáneos de modificación, EF Core detecta la divergencia en `xmin` y lanza `DbUpdateConcurrencyException`, la cual es traducida por el middleware en un código HTTP `409 Conflict` (RFC 7807) para que el cliente reintente con los datos frescos.
