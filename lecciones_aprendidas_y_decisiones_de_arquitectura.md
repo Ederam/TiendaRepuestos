@@ -155,3 +155,9 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 - **Contexto:** En escenarios de alto volumen de ventas en mostrador, dos cajeros pueden intentar facturar existencias del mismo repuesto de forma simultánea, arriesgando sobreventas o inconsistencias de stock.
 - **Decisión:** Implementar concurrencia optimista utilizando `builder.UseXminAsConcurrencyToken()` de Npgsql/EF Core sobre la entidad `Producto`.
 - **Consecuencia:** Cero sobrecarga de columnas extras en la base de datos. Ante intentos simultáneos de modificación, EF Core detecta la divergencia en `xmin` y lanza `DbUpdateConcurrencyException`, la cual es traducida por el middleware en un código HTTP `409 Conflict` (RFC 7807) para que el cliente reintente con los datos frescos.
+
+### ADR-008: Paginación en Servidor con Metadatos (PagedResult) y AsNoTracking
+
+- **Contexto:** En catálogos extensos de repuestos, retornar listas completas impacta el ancho de banda y la memoria del servidor.
+- **Decisión:** Implementar un envoltorio inmutable `PagedResult<T>` con `Skip`/`Take`, control estricto de tamaño máximo (`PageSize` acotado a 100) y ejecución de consultas de lectura con `.AsNoTracking()`.
+- **Consecuencia:** Cero sobrecoste de memoria en el Change Tracker de EF Core para lecturas de catálogo y contratos limpios listos para componentes de paginación en el cliente.

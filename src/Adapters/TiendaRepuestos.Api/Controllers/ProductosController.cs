@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
+using TiendaRepuestos.Application.Common;
 using TiendaRepuestos.Application.DTOs;
 using TiendaRepuestos.Application.Services;
 using TiendaRepuestos.Domain.Constants;
@@ -142,5 +143,23 @@ public class ProductosController : ControllerBase
         // Se eliminan bloques try-catch manuales para mantener el controlador limpio y homogéneo con RFC 7807
         ProductoResponseDto productoActualizado = await _productoService.AjustarStockAsync(id, dto.Cantidad, cancellationToken);
         return Ok(productoActualizado);
+    }
+
+    /// <summary>
+    /// Consulta el catálogo de repuestos de forma paginada con filtros por nombre, código y categoría.
+    /// </summary>
+    /// <param name="parameters">Parámetros de navegación y criterios de filtro.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>Página de repuestos con metadatos de paginación.</returns>
+    [HttpGet("paginado")]
+    [Authorize(Roles = Roles.Todos)]
+    [ProducesResponseType(typeof(PagedResult<ProductoResponseDto>), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status401Unauthorized)]
+    public async Task<ActionResult<PagedResult<ProductoResponseDto>>> ObtenerPaginado(
+        [FromQuery] ConsultaProductosParameters parameters,
+        CancellationToken cancellationToken)
+    {
+        PagedResult<ProductoResponseDto> resultado = await _productoService.ObtenerPaginadoAsync(parameters, cancellationToken);
+        return Ok(resultado);
     }
 }

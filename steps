@@ -625,3 +625,18 @@ Ejecuta este comando en PowerShell para listar las tablas reales que EF Core cre
 
 PowerShell
 podman exec -it tienda_repuestos_db psql -U dev_user -d pos_repuestos_db -c "\dt"
+
+# Crear el DTO de Parámetros de Filtro y Paginación
+
+Crea el archivo:
+src/Core/TiendaRepuestos.Application/DTOs/ConsultaProductosParameters.cs
+
+PowerShell
+New-Item -ItemType File -Path "src/Core/TiendaRepuestos.Application/DTOs/ConsultaProductosParameters.cs" -Force
+
+# Eliminar el Archivo Duplicado
+
+Ejecuta este comando en tu terminal de PowerShell en la raíz del proyecto para borrar la interfaz duplicada en Application:
+
+PowerShell
+Remove-Item "src/Core/TiendaRepuestos.Application/Ports/IProductoRepository.cs" -Force
