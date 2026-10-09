@@ -137,3 +137,8 @@ git status
 git add .
 git commit -m "feat(catalog): paginacion formal pagedresult, filtros avanzados y cierre de sprint 3"
 git push
+
+git status
+git add .
+git commit -m "docs: cierre de fase backend (sprint 1-3) y preparacion para integracion spa angular 19"
+git push

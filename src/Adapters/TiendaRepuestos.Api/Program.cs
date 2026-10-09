@@ -12,7 +12,23 @@ WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// 2. Configuración de Autenticación con JWT Bearer
+// 2. Política de CORS (Cross-Origin Resource Sharing) para el Frontend Angular
+const string FrontendPolicy = "FrontendPolicy";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: FrontendPolicy, policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:4200",  // Servidor de desarrollo estándar de Angular CLI
+                "https://localhost:4200"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials(); // Permite intercambio seguro de encabezados de autorización y cookies
+    });
+});
+
+// 3. Configuración de Autenticación con JWT Bearer
 string jwtSecret = builder.Configuration["JwtSettings:Secret"]
     ?? throw new InvalidOperationException("Falta configurar JwtSettings:Secret");
 string jwtIssuer = builder.Configuration["JwtSettings:Issuer"]
@@ -42,7 +58,7 @@ builder.Services.AddAuthentication(options =>
 
 builder.Services.AddAuthorization();
 
-// 3. Controllers y Documentación Swagger con Soporte para Tokens Bearer
+// 4. Controllers y Documentación Swagger con Soporte para Tokens Bearer
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -83,7 +99,7 @@ builder.Services.AddSwaggerGen(options =>
 
 WebApplication app = builder.Build();
 
-// 4. Pipeline HTTP: Middleware Global de Excepciones
+// 5. Pipeline HTTP: Middleware Global de Excepciones RFC 7807
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
@@ -94,7 +110,11 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-// 5. Autenticación y Autorización (El orden es mandatorio)
+// 6. Activación de CORS en el Pipeline HTTP
+// NOTA DE ORDEN: Debe ejecutarse antes del middleware de Autenticación y Autorización
+app.UseCors(FrontendPolicy);
+
+// 7. Autenticación y Autorización
 app.UseAuthentication();
 app.UseAuthorization();
 

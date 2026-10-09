@@ -640,3 +640,5 @@ Ejecuta este comando en tu terminal de PowerShell en la raíz del proyecto para 
 
 PowerShell
 Remove-Item "src/Core/TiendaRepuestos.Application/Ports/IProductoRepository.cs" -Force
+
+# Configurar la Política de CORS en Program.cs
