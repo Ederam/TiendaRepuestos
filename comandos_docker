@@ -1,0 +1,15 @@
+# COnfirmar que el contenedor esta arriba
+
+podman ps
+
+# Comprueba que el motor de PostgreSQL esté listo para recibir peticiones:
+
+podman logs tienda_repuestos_db
+
+# Asegurar que el contenedor de Docker esté activo
+
+En tu terminal de PowerShell en D:\ER-DEV\Repuestos:
+
+PowerShell
+docker compose up -d
+podman compose up -d

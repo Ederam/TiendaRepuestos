@@ -5,14 +5,10 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using TiendaRepuestos.Domain.Entities;
 
 /// <summary>
-/// Configuración de mapeo Fluent API para la entidad <see cref="Producto"/> en la base de datos PostgreSQL.
+/// Configuración de mapeo relacional (Fluent API) para la entidad <see cref="Producto"/> en PostgreSQL.
 /// </summary>
 public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
 {
-    /// <summary>
-    /// Configura la estructura de la tabla, claves, índices y restricciones para la entidad Producto.
-    /// </summary>
-    /// <param name="builder">Constructor de la entidad proporcionado por EF Core.</param>
     public void Configure(EntityTypeBuilder<Producto> builder)
     {
         builder.ToTable("productos");
@@ -20,16 +16,19 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.HasKey(p => p.Id);
 
         builder.Property(p => p.Nombre)
-            .HasMaxLength(150)
-            .IsRequired();
+            .IsRequired()
+            .HasMaxLength(150);
 
         builder.Property(p => p.CodigoParte)
-            .HasMaxLength(50)
-            .IsRequired(false);
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.HasIndex(p => p.CodigoParte)
+            .IsUnique();
 
         builder.Property(p => p.PrecioVenta)
-            .HasPrecision(12, 2)
-            .IsRequired();
+            .IsRequired()
+            .HasPrecision(18, 2);
 
         builder.Property(p => p.StockActual)
             .IsRequired();
@@ -37,15 +36,14 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(p => p.StockMinimo)
             .IsRequired();
 
-        builder.Property(p => p.Estado)
-            .HasConversion<int>()
+        builder.Property(p => p.Activo)
             .IsRequired();
 
-        builder.Property(p => p.Activo)
-            .HasDefaultValue(true);
+        builder.Property(p => p.CategoriaId)
+            .IsRequired();
 
-        // Índice de búsqueda rápida por Nombre y Código de Parte
-        builder.HasIndex(p => p.Nombre);
-        builder.HasIndex(p => p.CodigoParte);
+        // 🚀 Concurrencia Optimista Nativa de PostgreSQL
+        // EF Core utiliza la columna interna de sistema 'xmin' como RowVersion automático.
+        builder.UseXminAsConcurrencyToken();
     }
 }

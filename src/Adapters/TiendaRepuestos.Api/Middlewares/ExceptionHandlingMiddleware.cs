@@ -3,6 +3,7 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -61,6 +62,7 @@ public class ExceptionHandlingMiddleware
 
         HttpStatusCode statusCode;
         string title;
+        string detailMessage = exception.Message;
         IDictionary<string, string[]>? validationErrors = null;
 
         switch (exception)
@@ -74,6 +76,12 @@ public class ExceptionHandlingMiddleware
                         g => g.Key,
                         g => g.Select(e => e.ErrorMessage).ToArray()
                     );
+                break;
+
+            case DbUpdateConcurrencyException:
+                statusCode = HttpStatusCode.Conflict;
+                title = "Conflicto de concurrencia en inventario";
+                detailMessage = "Los datos del repuesto fueron modificados simultáneamente por otra transacción. Por favor, consulte los datos actualizados y reintente la operación.";
                 break;
 
             case InvalidOperationException:
@@ -117,7 +125,7 @@ public class ExceptionHandlingMiddleware
             {
                 Status = (int)statusCode,
                 Title = title,
-                Detail = exception.Message,
+                Detail = detailMessage,
                 Instance = context.Request.Path
             };
         }

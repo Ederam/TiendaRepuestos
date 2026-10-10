@@ -1,0 +1,12 @@
+# Consultar las tablas con el usuario correcto
+podman exec -it tienda_repuestos_db psql -U dev_user -d pos_repuestos_db -c "\dt"
+                 List of relations
+ Schema |         Name          | Type  |  Owner   
+--------+-----------------------+-------+----------
+ public | Categorias            | table | dev_user
+ public | DetallesVenta         | table | dev_user
+ public | Ventas                | table | dev_user
+ public | __EFMigrationsHistory | table | dev_user
+ public | productos             | table | dev_user
+ public | usuarios              | table | dev_user
+(6 rows)
