@@ -23,10 +23,27 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
             .IsRequired()
             .HasMaxLength(50);
 
-        builder.HasIndex(p => p.CodigoParte)
-            .IsUnique();
+        builder.Property(p => p.Origen)
+            .IsRequired()
+            .HasMaxLength(50);
+
+        builder.Property(p => p.Ubicacion)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.MarcaRepuesto)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.MarcaVehiculo)
+            .HasMaxLength(100);
+
+        builder.Property(p => p.Condicion)
+            .HasMaxLength(50);
 
         builder.Property(p => p.PrecioVenta)
+            .IsRequired()
+            .HasPrecision(18, 2);
+
+        builder.Property(p => p.Costo)
             .IsRequired()
             .HasPrecision(18, 2);
 
@@ -42,8 +59,12 @@ public class ProductoConfiguration : IEntityTypeConfiguration<Producto>
         builder.Property(p => p.CategoriaId)
             .IsRequired();
 
-        // 🚀 Concurrencia Optimista Nativa de PostgreSQL
-        // EF Core utiliza la columna interna de sistema 'xmin' como RowVersion automático.
-        builder.UseXminAsConcurrencyToken();
+        // Clave de negocio única compuesta para permitir referencias compartidas con aliados
+        builder.HasIndex(p => new { p.CodigoParte, p.Origen })
+            .IsUnique()
+            .HasDatabaseName("IX_Productos_CodigoParte_Origen");
+
+        // Concurrencia Optimista Estándar en EF Core 8+ para PostgreSQL (elimina CS0618)
+        builder.Property<uint>("xmin").IsRowVersion();
     }
 }

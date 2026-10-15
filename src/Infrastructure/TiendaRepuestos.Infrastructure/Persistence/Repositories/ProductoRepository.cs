@@ -74,7 +74,7 @@ public class ProductoRepository : IProductoRepository
             .ToListAsync(cancellationToken);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc/>
     public async Task<(IReadOnlyCollection<Producto> Items, int TotalCount)> ObtenerPaginadoAsync(
         string? busqueda,
         Guid? categoriaId,
@@ -123,6 +123,36 @@ public class ProductoRepository : IProductoRepository
     public async Task UpdateAsync(Producto producto, CancellationToken cancellationToken = default)
     {
         _context.Productos.Update(producto);
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+
+    /// <inheritdoc/>
+    public async Task<IReadOnlyCollection<Producto>> ObtenerPorCodigosYOrigenesAsync(
+        IReadOnlyCollection<string> codigosParte,
+        IReadOnlyCollection<string> origenes,
+        CancellationToken cancellationToken = default)
+    {
+        List<string> codigosNormalizados = codigosParte.Select(c => c.ToUpper().Trim()).Distinct().ToList();
+        List<string> origenesNormalizados = origenes.Select(o => o.ToUpper().Trim()).Distinct().ToList();
+
+        List<Producto> coincidentes = await _context.Productos
+            .Where(p => origenesNormalizados.Contains(p.Origen.ToUpper()) &&
+                        codigosNormalizados.Contains(p.CodigoParte.ToUpper()))
+            .ToListAsync(cancellationToken);
+
+        return coincidentes.AsReadOnly();
+    }
+
+    /// <inheritdoc/>
+    public async Task GuardarCambiosLoteAsync(
+        IReadOnlyCollection<Producto> nuevosProductos,
+        CancellationToken cancellationToken = default)
+    {
+        if (nuevosProductos.Count > 0)
+        {
+            await _context.Productos.AddRangeAsync(nuevosProductos, cancellationToken);
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 }

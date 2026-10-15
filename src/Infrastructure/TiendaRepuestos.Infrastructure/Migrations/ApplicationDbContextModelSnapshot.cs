@@ -17,7 +17,7 @@ namespace TiendaRepuestos.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.31")
+                .HasAnnotation("ProductVersion", "8.0.32")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -88,28 +88,55 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("CategoriaId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("CodigoParte")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Condicion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("Costo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Estado")
                         .HasColumnType("integer");
+
+                    b.Property<string>("MarcaRepuesto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MarcaVehiculo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<string>("Origen")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<decimal>("PrecioVenta")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("StockActual")
                         .HasColumnType("integer");
@@ -117,11 +144,25 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                     b.Property<int>("StockMinimo")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Ubicacion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CodigoParte");
+                    b.HasIndex("CodigoParte")
+                        .IsUnique();
 
-                    b.HasIndex("Nombre");
+                    b.HasIndex("CodigoParte", "Origen")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Productos_CodigoParte_Origen");
 
                     b.ToTable("productos", (string)null);
                 });

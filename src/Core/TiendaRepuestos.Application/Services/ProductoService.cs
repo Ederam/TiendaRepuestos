@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using TiendaRepuestos.Application.Common;
 using TiendaRepuestos.Application.DTOs;
 using TiendaRepuestos.Domain.Entities;
+using TiendaRepuestos.Domain.Enums;
 using TiendaRepuestos.Domain.Ports;
 
 /// <summary>
@@ -122,7 +123,7 @@ public class ProductoService
     /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
     /// <returns>Resultado paginado con la colección de repuestos y metadatos de navegación.</returns>
     public async Task<PagedResult<ProductoResponseDto>> ObtenerPaginadoAsync(
-        ConsultaProductosParameters parameters, 
+        ConsultaProductosParameters parameters,
         CancellationToken cancellationToken = default)
     {
         (IReadOnlyCollection<Producto> items, int totalCount) = await _repository.ObtenerPaginadoAsync(
@@ -136,5 +137,137 @@ public class ProductoService
         List<ProductoResponseDto> dtos = items.Select(ProductoResponseDto.FromEntity).ToList();
 
         return new PagedResult<ProductoResponseDto>(dtos, totalCount, parameters.PageNumber, parameters.PageSize);
+    }
+
+    /// <summary>
+    /// Procesa una carga masiva de repuestos realizando un Upsert idempotente mediante la clave compuesta Origen + Código de Parte.
+    /// </summary>
+    /// <param name="items">Colección de registros entrantes desde archivo.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>Resumen del procesamiento con cantidades de creados, actualizados y sin cambios.</returns>
+    public async Task<CargaMasivaResultadoDto> CargaMasivaAsync(
+        IReadOnlyCollection<CargaMasivaItemDto> items,
+        CancellationToken cancellationToken = default)
+    {
+        if (items == null || items.Count == 0)
+        {
+            return new CargaMasivaResultadoDto(0, 0, 0, 0, 0, new List<string> { "No se proporcionaron registros para procesar." });
+        }
+
+        List<string> codigos = items.Select(i => i.CodigoParte).Where(c => !string.IsNullOrWhiteSpace(c)).Distinct().ToList();
+        List<string> origenes = items.Select(i => i.Origen ?? "PROPIO_MACROLATAS").Distinct().ToList();
+
+        IReadOnlyCollection<Producto> existentes = await _repository.ObtenerPorCodigosYOrigenesAsync(codigos, origenes, cancellationToken);
+        Dictionary<string, Producto> mapaExistentes = existentes.ToDictionary(p => GenerarClaveCompuesta(p.Origen, p.CodigoParte));
+
+        int insertados = 0;
+        int actualizados = 0;
+        int sinCambios = 0;
+        int omitidos = 0;
+        List<Producto> nuevosParaInsertar = new List<Producto>();
+
+        foreach (CargaMasivaItemDto item in items)
+        {
+            if (string.IsNullOrWhiteSpace(item.CodigoParte) || string.IsNullOrWhiteSpace(item.Nombre))
+            {
+                omitidos++;
+                continue;
+            }
+
+            string clave = GenerarClaveCompuesta(item.Origen, item.CodigoParte);
+
+            if (mapaExistentes.TryGetValue(clave, out Producto? productoExistente))
+            {
+                bool fueModificado = ActualizarProductoExistente(productoExistente, item);
+                if (fueModificado)
+                {
+                    actualizados++;
+                }
+                else
+                {
+                    sinCambios++;
+                }
+            }
+            else
+            {
+                Producto nuevoProducto = CrearNuevoProducto(item);
+                nuevosParaInsertar.Add(nuevoProducto);
+                mapaExistentes.Add(clave, nuevoProducto);
+                insertados++;
+            }
+        }
+
+        await _repository.GuardarCambiosLoteAsync(nuevosParaInsertar, cancellationToken);
+
+        List<string> mensajes = new List<string>
+        {
+            $"Proceso completado exitosamente: {insertados} creados, {actualizados} actualizados, {sinCambios} sin cambios, {omitidos} omitidos."
+        };
+
+        return new CargaMasivaResultadoDto(
+            TotalProcesados: items.Count,
+            Insertados: insertados,
+            Actualizados: actualizados,
+            SinCambios: sinCambios,
+            Omitidos: omitidos,
+            Mensajes: mensajes
+        );
+    }
+
+    /// <summary>
+    /// Genera la clave compuesta para el índice en memoria en tiempo O(1).
+    /// </summary>
+    private static string GenerarClaveCompuesta(string? origen, string codigoParte)
+    {
+        string origenNormalizado = (origen ?? "PROPIO_MACROLATAS").Trim().ToUpperInvariant();
+        string codigoNormalizado = codigoParte.Trim().ToUpperInvariant();
+        return $"{origenNormalizado}::{codigoNormalizado}";
+    }
+
+    /// <summary>
+    /// Aplica la actualización de valores sobre un repuesto ya existente validando si hubo cambios reales.
+    /// </summary>
+    private static bool ActualizarProductoExistente(Producto producto, CargaMasivaItemDto dto)
+    {
+        DatosSincronizacionProducto datosSincronizacion = new DatosSincronizacionProducto(
+            Nombre: dto.Nombre,
+            PrecioVenta: dto.PrecioVenta,
+            Costo: dto.Costo,
+            NuevoStock: dto.StockActual,
+            Ubicacion: dto.Ubicacion,
+            Descripcion: dto.Descripcion,
+            MarcaRepuesto: dto.MarcaRepuesto,
+            MarcaVehiculo: dto.MarcaVehiculo
+        );
+
+        return producto.SincronizarCargaMasiva(datosSincronizacion);
+    }
+
+    /// <summary>
+    /// Construye una nueva instancia de la entidad Producto aplicando metadatos complementarios sin violar reglas de arquitectura limpia.
+    /// </summary>
+    private static Producto CrearNuevoProducto(CargaMasivaItemDto dto)
+    {
+        Producto nuevo = new Producto(
+            dto.Nombre,
+            dto.CodigoParte,
+            dto.PrecioVenta,
+            dto.StockActual,
+            2,
+            EstadoProducto.Nuevo,
+            dto.CategoriaId ?? Guid.Empty
+        );
+
+        nuevo.AsignarMetadatosCatalogo(
+            dto.Origen,
+            dto.Ubicacion,
+            dto.MarcaRepuesto,
+            dto.MarcaVehiculo,
+            dto.Condicion,
+            dto.Costo,
+            dto.Descripcion
+        );
+
+        return nuevo;
     }
 }

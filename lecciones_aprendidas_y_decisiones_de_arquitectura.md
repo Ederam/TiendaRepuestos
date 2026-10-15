@@ -161,3 +161,18 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 - **Contexto:** En catálogos extensos de repuestos, retornar listas completas impacta el ancho de banda y la memoria del servidor.
 - **Decisión:** Implementar un envoltorio inmutable `PagedResult<T>` con `Skip`/`Take`, control estricto de tamaño máximo (`PageSize` acotado a 100) y ejecución de consultas de lectura con `.AsNoTracking()`.
 - **Consecuencia:** Cero sobrecoste de memoria en el Change Tracker de EF Core para lecturas de catálogo y contratos limpios listos para componentes de paginación en el cliente.
+
+### Hito 23 — Persistencia Masiva Idempotente (Upsert), Clean Architecture y Migración PostgreSQL
+
+- **Fecha:** 2026-10-15
+- **Rama Git:** `feat/inventario-carga-masiva` (Backend: `TiendaRepuestos` | Frontend: `TiendaRepuestos-UI`)
+- **Entregables:**
+  - **Dominio Desacoplado y Libre de DTOs:** Corrección del error `CS0246` aislando `TiendaRepuestos.Domain` de cualquier contrato de `Application`. El puerto `IProductoRepository` opera exclusivamente con entidades de dominio (`Producto`), y la orquestación del mapeo reside en `ProductoService`.
+  - **Resolución de Code Smells (Sonar S107):** Encapsulación de parámetros en el objeto de dominio `DatosSincronizacionProducto` para eliminar firmas con más de 7 parámetros tanto en constructores como en métodos de mutación (`SincronizarCargaMasiva`).
+  - **Concurrencia Optimista Npgsql Moderna:** Erradicación del aviso de obsolescencia `CS0618` mediante la sintaxis nativa de EF Core 8: `builder.Property<uint>("xmin").IsRowVersion()`.
+  - **Mecanismo de Upsert Multiorigen:** Implementación de índice único compuesto `IX_Productos_CodigoParte_Origen` en PostgreSQL para permitir coexistencia de referencias idénticas entre aliados (`ALIADO_EUROCAR`) y catálogo propio (`PROPIO_MACROLATAS`).
+  - **Migración Exitosa:** Creación y aplicación de la migración `SoporteCargaMasivaYMultiorigen` apuntando a la ruta física real de adaptadores (`src/Adapters/TiendaRepuestos.Api`).
+- **Lecciones Aprendidas:**
+  - **Regla Estricta de Dependencias en Clean Architecture:** La capa de Dominio nunca debe referenciar ni conocer los DTOs de Transporte de la capa de Aplicación. La orquestación y el cálculo del Upsert en memoria $O(1)$ pertenecen a la capa de Aplicación/Servicio, dejando al repositorio únicamente la responsabilidad de consultar por claves compuestas y persistir lotes (`GuardarCambiosLoteAsync`).
+  - **Primitive Obsession y Regla Sonar S107:** Acumular argumentos primitivos en firmas de métodos degrada la legibilidad y mantenibilidad. Agrupar atributos relacionados en objetos de dominio inmutables (`records`) simplifica contratos y blinda el código contra advertencias de análisis estático.
+  - **Rutas de Ensamblado en CLI de EF Core:** Al ejecutar `dotnet ef migrations`, el flag `--startup-project` debe apuntar a la ruta real del proyecto ejecutable (en este caso `src/Adapters/TiendaRepuestos.Api` en lugar de una ruta genérica de presentación) para que el CLI resuelva correctamente los metadatos del SDK.

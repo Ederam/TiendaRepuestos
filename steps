@@ -642,3 +642,10 @@ PowerShell
 Remove-Item "src/Core/TiendaRepuestos.Application/Ports/IProductoRepository.cs" -Force
 
 # Configurar la Política de CORS en Program.cs
+
+# Crear la migración:
+
+PowerShell
+dotnet ef migrations add SoporteCargaMasivaYMultiorigen --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api" 2. Aplicar la migración a la base de datos PostgreSQL:
+PowerShell
+dotnet ef database update --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api"

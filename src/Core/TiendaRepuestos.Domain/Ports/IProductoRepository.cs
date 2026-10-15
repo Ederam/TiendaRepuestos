@@ -73,4 +73,29 @@ public interface IProductoRepository
     /// <param name="producto">Entidad modificada.</param>
     /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
     Task UpdateAsync(Producto producto, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Obtiene una lista de productos existentes que coincidan con una lista de códigos de parte y orígenes.
+    /// </summary>
+    /// <param name="codigosParte">Colección de códigos a buscar.</param>
+    /// <param name="origenes">Colección de orígenes a evaluar.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>Colección de entidades existentes encontradas.</returns>
+    Task<IReadOnlyCollection<Producto>> ObtenerPorCodigosYOrigenesAsync(
+        IReadOnlyCollection<string> codigosParte,
+        IReadOnlyCollection<string> origenes,
+        CancellationToken cancellationToken = default);
+
+
+    /// <summary>
+    /// Persiste en lote una colección de nuevos productos y actualiza las entidades modificadas.
+    /// </summary>
+    /// <param name="nuevosProductos">Colección de entidades nuevas para inserción.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    Task GuardarCambiosLoteAsync(
+        IReadOnlyCollection<Producto> nuevosProductos,
+        CancellationToken cancellationToken = default);
+
+
+    
 }
