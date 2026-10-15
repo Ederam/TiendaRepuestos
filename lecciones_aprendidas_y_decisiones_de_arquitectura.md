@@ -176,3 +176,35 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
   - **Regla Estricta de Dependencias en Clean Architecture:** La capa de Dominio nunca debe referenciar ni conocer los DTOs de Transporte de la capa de Aplicación. La orquestación y el cálculo del Upsert en memoria $O(1)$ pertenecen a la capa de Aplicación/Servicio, dejando al repositorio únicamente la responsabilidad de consultar por claves compuestas y persistir lotes (`GuardarCambiosLoteAsync`).
   - **Primitive Obsession y Regla Sonar S107:** Acumular argumentos primitivos en firmas de métodos degrada la legibilidad y mantenibilidad. Agrupar atributos relacionados en objetos de dominio inmutables (`records`) simplifica contratos y blinda el código contra advertencias de análisis estático.
   - **Rutas de Ensamblado en CLI de EF Core:** Al ejecutar `dotnet ef migrations`, el flag `--startup-project` debe apuntar a la ruta real del proyecto ejecutable (en este caso `src/Adapters/TiendaRepuestos.Api` en lugar de una ruta genérica de presentación) para que el CLI resuelva correctamente los metadatos del SDK.
+
+### ADR-009: Persistencia Masiva Idempotente (Upsert) con Detección de Cambios
+
+- **Contexto:** La importación recurrente de catálogos propios (Macrolatas) y listas de aliados (Eurocar con más de 20.000 registros) no debe duplicar productos existentes ni computar modificaciones ficticias cuando los valores del archivo no han cambiado.
+- **Decisión:**
+  1. Definir una clave natural única compuesta a nivel de persistencia en PostgreSQL: `IX_Productos_CodigoParte_Origen`.
+  2. Implementar un diccionario en memoria $O(1)$ (`Origen::CodigoParte`) en `ProductoService` para discriminar entre inserciones y actualizaciones.
+  3. Delegar en la entidad `Producto` (`SincronizarCargaMasiva`) la evaluación booleana de modificaciones reales, computando con precisión registros `insertados`, `actualizados`, `sinCambios` y `omitidos`.
+- **Consecuencia:** Cero polución de stock por re-importación accidental del mismo archivo, mínimo impacto transaccional en PostgreSQL al evitar actualizaciones redundantes en disco y respuestas de métricas transparentes hacia el operador.
+
+---
+
+### Lección Aprendida #11 — Resolución de Code Smells (Sonar S107) y Aislamiento de Dominio
+
+- **Violación de la Regla de Dependencia en Clean Architecture:**
+  - _Síntoma:_ Error de compilación `CS0246` en `IProductoRepository` al referenciar DTOs de transporte (`CargaMasivaItemDto`).
+  - _Causa:_ La capa `Domain` no puede tener dependencias hacia `Application`.
+  - _Solución:_ Mantener el puerto `IProductoRepository` interactuando únicamente con entidades del dominio (`Producto`), trasladando la orquestación del mapeo y transformación al servicio de aplicación `ProductoService`.
+
+- **Control de Complejidad en Parámetros (SonarAnalyzer S107):**
+  - _Síntoma:_ Advertencia de análisis estático `S107` por constructores con 14 parámetros y métodos de sincronización con 8 parámetros.
+  - _Causa:_ Olor de código por _Primitive Obsession_ al acumular atributos técnicos del repuesto en una sola firma.
+  - _Solución:_ Mantener el constructor base con los 7 parámetros invariantes requeridos y encapsular los atributos complementarios de catálogo en el método de dominio `AsignarMetadatosCatalogo(...)` y el récord inmutable `DatosSincronizacionProducto`.
+
+- **Concurrencia Optimista Estándar en EF Core 8+ con Npgsql:**
+  - _Síntoma:_ Aviso `CS0618` por uso del método obsoleto `builder.UseXminAsConcurrencyToken()`.
+  - _Solución:_ Migrar a la sintaxis estándar de Entity Framework Core: `builder.Property<uint>("xmin").IsRowVersion()`, asegurando compatibilidad nativa con PostgreSQL sin advertencias de deprecación.
+
+- **Resolución de Metadatos en CLI de EF Core:**
+  - _Síntoma:_ Error `Unable to retrieve project metadata. Ensure it's an SDK-style project` al ejecutar `dotnet ef migrations add`.
+  - _Causa:_ El flag `--startup-project` apuntaba a una ruta inexistente (`src/Presentation/...`) en lugar de la ubicación real del ensamblado API (`src/Adapters/TiendaRepuestos.Api`).
+  - _Solución:_ Especificar siempre las rutas relativas exactas hacia los proyectos `.csproj` de infraestructura y adaptadores API.
