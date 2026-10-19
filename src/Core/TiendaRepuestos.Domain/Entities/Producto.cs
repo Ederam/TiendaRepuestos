@@ -32,10 +32,11 @@ public class Producto
 
     /// <summary>
     /// Inicializa una nueva instancia de repuesto con los atributos base requeridos.
+    /// Permite precioVenta >= 0 para soportar importaciones masivas con precios pendientes de cotizar.
     /// </summary>
     /// <param name="nombre">Nombre comercial o descripción corta del repuesto.</param>
     /// <param name="codigoParte">Código de referencia o parte técnica asignado por fabricante.</param>
-    /// <param name="precioVenta">Precio final de venta al público en COP.</param>
+    /// <param name="precioVenta">Precio final de venta al público en COP (>= 0).</param>
     /// <param name="stockInicial">Existencias iniciales físicas en inventario.</param>
     /// <param name="stockMinimo">Nivel de inventario de alerta mínima para reposición.</param>
     /// <param name="estado">Estado inicial del ciclo de vida del repuesto.</param>
@@ -49,25 +50,7 @@ public class Producto
         EstadoProducto estado,
         Guid categoriaId)
     {
-        if (string.IsNullOrWhiteSpace(nombre))
-        {
-            throw new ArgumentException("El nombre del repuesto no puede estar vacío.", nameof(nombre));
-        }
-
-        if (precioVenta <= 0)
-        {
-            throw new ArgumentException("El precio de venta debe ser mayor a cero.", nameof(precioVenta));
-        }
-
-        if (stockInicial < 0)
-        {
-            throw new ArgumentException("El stock inicial no puede ser negativo.", nameof(stockInicial));
-        }
-
-        if (stockMinimo < 0)
-        {
-            throw new ArgumentException("El stock mínimo no puede ser negativo.", nameof(stockMinimo));
-        }
+        ValidarParametrosBasicos(nombre, precioVenta, stockInicial, stockMinimo);
 
         Id = Guid.NewGuid();
         Nombre = nombre.Trim();
@@ -132,6 +115,7 @@ public class Producto
             huboCambios = true;
         }
 
+        // Si el Excel trae un precio mayor a 0, actualiza; si trae 0 y ya existía un precio, conserva el existente
         if (datos.PrecioVenta > 0 && PrecioVenta != datos.PrecioVenta)
         {
             PrecioVenta = datos.PrecioVenta;
@@ -205,12 +189,12 @@ public class Producto
     /// <summary>
     /// Actualiza el precio de venta del repuesto validando el rango permitido.
     /// </summary>
-    /// <param name="nuevoPrecio">Nuevo precio de venta en COP.</param>
+    /// <param name="nuevoPrecio">Nuevo precio de venta en COP (>= 0).</param>
     public void ActualizarPrecio(decimal nuevoPrecio)
     {
-        if (nuevoPrecio <= 0)
+        if (nuevoPrecio < 0)
         {
-            throw new ArgumentException("El precio de venta debe ser mayor a cero.", nameof(nuevoPrecio));
+            throw new ArgumentException("El precio de venta no puede ser negativo.", nameof(nuevoPrecio));
         }
 
         PrecioVenta = nuevoPrecio;
@@ -237,5 +221,31 @@ public class Producto
     public void Desactivar()
     {
         Activo = false;
+    }
+
+    /// <summary>
+    /// Valida las reglas de invariabilidad del repuesto.
+    /// </summary>
+    private static void ValidarParametrosBasicos(string nombre, decimal precioVenta, int stockInicial, int stockMinimo)
+    {
+        if (string.IsNullOrWhiteSpace(nombre))
+        {
+            throw new ArgumentException("El nombre del repuesto no puede estar vacío.", nameof(nombre));
+        }
+
+        if (precioVenta < 0)
+        {
+            throw new ArgumentException("El precio de venta no puede ser negativo.", nameof(precioVenta));
+        }
+
+        if (stockInicial < 0)
+        {
+            throw new ArgumentException("El stock inicial no puede ser negativo.", nameof(stockInicial));
+        }
+
+        if (stockMinimo < 0)
+        {
+            throw new ArgumentException("El stock mínimo no puede ser negativo.", nameof(stockMinimo));
+        }
     }
 }
