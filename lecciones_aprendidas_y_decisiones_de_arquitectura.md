@@ -208,3 +208,8 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
   - _Síntoma:_ Error `Unable to retrieve project metadata. Ensure it's an SDK-style project` al ejecutar `dotnet ef migrations add`.
   - _Causa:_ El flag `--startup-project` apuntaba a una ruta inexistente (`src/Presentation/...`) en lugar de la ubicación real del ensamblado API (`src/Adapters/TiendaRepuestos.Api`).
   - _Solución:_ Especificar siempre las rutas relativas exactas hacia los proyectos `.csproj` de infraestructura y adaptadores API.
+
+### Lección Aprendida #13 — Deserialización Estricta de GUIDs y Fallbacks de Categoría
+
+- **Incompatibilidad de Tipos Primitivos en APIs REST:** El binder de ASP.NET Core rechaza payloads JSON si un campo esperado como `System.Guid` recibe un entero (`categoriaId: 1`).
+- **Solución:** Enviar `Guid.Empty` (`00000000-0000-0000-0000-000000000000`) desde el cliente cuando se requiera fallback automático a la categoría general, permitiendo que el servicio de aplicación resuelva la categoría principal sin errores de deserialización 400.
