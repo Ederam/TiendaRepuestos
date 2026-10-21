@@ -649,3 +649,33 @@ PowerShell
 dotnet ef migrations add SoporteCargaMasivaYMultiorigen --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api" 2. Aplicar la migración a la base de datos PostgreSQL:
 PowerShell
 dotnet ef database update --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api"
+
+# ajustes backed para cliente
+
+# Implementación en el Backend (.NET 8 Clean Architecture)Requerimos 4 elementos para que el módulo de clientes quede operativo y visible en Swagger: src/
+
+├── Core/
+│ ├── TiendaRepuestos.Domain/
+│ │ ├── Entities/Cliente.cs <-- Entidad de Dominio
+│ │ └── Ports/IClienteRepository.cs <-- Puerto de persistencia
+│ └── TiendaRepuestos.Application/
+│ ├── DTOs/ClienteDtos.cs <-- CrearClienteDto, ClienteResponseDto
+│ └── Services/ClienteService.cs <-- Servicio de Aplicación
+├── Infrastructure/
+│ ├── TiendaRepuestos.Infrastructure/
+│ │ └── Persistence/
+│ │ ├── ApplicationDbContext.cs <-- DbSet<Cliente>
+│ │ ├── Configurations/ClienteConfiguration.cs
+│ │ └── Repositories/ClienteRepository.cs <-- Implementación EF Core
+└── Adapters/
+└── TiendaRepuestos.Api/
+└── Controllers/ClientesController.cs <-- Endpoints REST
+
+# Crear y Aplicar Migración EF Core en BackendAbre PowerShell en la raíz del backend (TiendaRepuestos):PowerShell# 1. Crear la migración de Clientes
+
+dotnet ef migrations add AgregarModuloClientes --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api"
+
+# 2. Aplicarla a la base de datos PostgreSQL
+
+dotnet ef database update --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api"
+Inicia el backend con dotnet run --project "src/Adapters/TiendaRepuestos.Api". Al abrir Swagger (https://localhost:7298/swagger), verás la nueva sección Clientes con sus tres endpoints.

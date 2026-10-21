@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtGenerator, JwtGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
         services.AddScoped<IReportesRepository, ReportesRepository>();
+        services.AddScoped<IClienteRepository, ClienteRepository>();
 
         return services;
     }

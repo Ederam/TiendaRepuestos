@@ -17,6 +17,7 @@ public static class DependencyInjection
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         // Registrar servicios de caso de uso
+        services.AddScoped<Services.ClienteService>();
         services.AddScoped<Services.ProductoService>();
         services.AddScoped<Services.CategoriaService>();
         services.AddScoped<Services.VentaService>();

@@ -213,3 +213,9 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 
 - **Incompatibilidad de Tipos Primitivos en APIs REST:** El binder de ASP.NET Core rechaza payloads JSON si un campo esperado como `System.Guid` recibe un entero (`categoriaId: 1`).
 - **Solución:** Enviar `Guid.Empty` (`00000000-0000-0000-0000-000000000000`) desde el cliente cuando se requiera fallback automático a la categoría general, permitiendo que el servicio de aplicación resuelva la categoría principal sin errores de deserialización 400.
+
+### ADR-011: Flexibilización de Parámetros en Contratos de Creación y Mapeo Bidireccional
+
+- **Contexto:** La interoperabilidad entre clientes SPA y el Web API en .NET 8 generaba errores 400 por incompatibilidad en identificadores de categoría y omisiones en la propiedad de código de parte.
+- **Decisión:** Establecer un DTO de entrada tolerante con resolución interna de `Guid.Empty` y normalización de nombres de propiedades (`CodigoParte` en API vs `codigo` en cliente), garantizando que las consultas paginadas serialicen entidades completas y enriquecidas con marcas aftermarket y orígenes de inventario.
+- **Consecuencia:** Cero fricciones de integración, consistencia total en respuestas JSON y soporte transparente para la persistencia masiva y unitaria.
