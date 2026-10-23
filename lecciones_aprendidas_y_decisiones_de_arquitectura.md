@@ -220,11 +220,11 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 - **Decisión:** Establecer un DTO de entrada tolerante con resolución interna de `Guid.Empty` y normalización de nombres de propiedades (`CodigoParte` en API vs `codigo` en cliente), garantizando que las consultas paginadas serialicen entidades completas y enriquecidas con marcas aftermarket y orígenes de inventario.
 - **Consecuencia:** Cero fricciones de integración, consistencia total en respuestas JSON y soporte transparente para la persistencia masiva y unitaria.
 
-### ADR-012: Consecutivos Atómicos en PostgreSQL y Desacoplamiento del Carrito POS con Signals
+### ADR-012: Consecutivos Atómicos en PostgreSQL y Snapshots Inmutables de Comprador
 
-- **Contexto:** La emisión de ventas concurrentes en el mostrador exigía eliminar el riesgo de folios duplicados delegados al cliente, así como resolver el acoplamiento y exceso de líneas en `pos.component.ts`. Adicionalmente, se requería preservar el histórico inmutable del comprador para efectos tributarios sin violar los contratos REST RFC 7807.
+- **Contexto:** En el mostrador del 7 de Agosto la concurrencia de facturación provocaba riesgos de duplicados si el consecutivo se generaba en cliente; además, los precios unitarios son objeto de negociación comercial directa y las ventas requieren validez fiscal legal persistiendo la identidad del comprador.
 - **Decisión:**
-  1. Implementar la abstracción `IConsecutivoService` en dominio y su adaptador `ConsecutivoService` apoyado en la secuencia atómica nativa `seq_ventas_consecutivo` de PostgreSQL, retirando `NumeroComprobante` de los DTOs de entrada.
-  2. Almacenar un snapshot inmutable de `ClienteDocumento` y `ClienteNombre` en el agregado `Venta`, soportando ventas anónimas de mostrador (`222222222222` / `Consumidor Final`) o clientes con personería jurídica.
-  3. Refactorizar el módulo POS en Angular 19 extrayendo toda la gestión del estado, validación de inventario y políticas contra costo hacia un servicio dedicado `PosCartService` mediante Signals reactivas, reduciendo la complejidad del componente visual a menos de 230 líneas.
-- **Consecuencia:** Cero condiciones de carrera en facturación concurrente, validaciones estrictas en tiempo de compilación y desacoplamiento limpio conforme al principio de responsabilidad única (SRP).
+  1. Delegar la secuencia a PostgreSQL (`seq_ventas_consecutivo`) mediante el puerto `IConsecutivoService`, desacoplando `NumeroComprobante` de la entrada del cliente.
+  2. Implementar snapshot inmutable de `ClienteDocumento` y `ClienteNombre` en el agregado `Venta`.
+  3. Permitir que `CrearDetalleVentaDto` transporte el precio unitario acordado en el mostrador siempre que cubra la regla de negocio: `precioPactado >= costoUnitario`.
+- **Consecuencia:** Cero colisiones de folios, trazabilidad fiscal inalterable y consistencia absoluta entre la pantalla de cobro y el comprobante térmico liquidado.

@@ -21,3 +21,17 @@ docker exec -i tienda_repuestos_db psql -U dev_user -d pos_repuestos_db < backup
 
 PowerShell
 podman exec tienda_repuestos_db pg_dump -U dev_user -d pos_repuestos_db > backup_macrolatas.sql
+
+# Al finalizar en la oficina (Podman):
+En C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos:
+
+PowerShell
+podman exec tienda_repuestos_db pg_dump -U dev_user -d pos_repuestos_db > backup_macrolatas.sql
+
+## Al iniciar en casa (Docker):
+En tu equipo personal, con el contenedor encendido:
+
+PowerShell
+docker exec -i tienda_repuestos_db psql -U dev_user -d pos_repuestos_db < backup_macrolatas.sql
+
+
