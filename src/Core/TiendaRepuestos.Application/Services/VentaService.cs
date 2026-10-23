@@ -13,7 +13,7 @@ using TiendaRepuestos.Domain.Ports;
 
 /// <summary>
 /// Orquestador del caso de uso de ventas: validación, generación atómica de folios,
-/// verificación y descuento de existencias de repuestos, y persistencia transaccional.
+/// verificación de stock y costos, y persistencia transaccional.
 /// </summary>
 public class VentaService
 {
@@ -26,11 +26,6 @@ public class VentaService
     /// <summary>
     /// Inicializa una nueva instancia de <see cref="VentaService"/> inyectando puertos y servicios requeridos.
     /// </summary>
-    /// <param name="ventaRepository">Puerto de almacenamiento y consulta de comprobantes.</param>
-    /// <param name="productoRepository">Puerto de persistencia de inventario.</param>
-    /// <param name="consecutivoService">Puerto generador de secuencias atómicas de comprobantes.</param>
-    /// <param name="crearVentaValidator">Validador de reglas para la creación de ventas.</param>
-    /// <param name="logger">Servicio de logs estructurados.</param>
     public VentaService(
         IVentaRepository ventaRepository,
         IProductoRepository productoRepository,
@@ -48,8 +43,6 @@ public class VentaService
     /// <summary>
     /// Consulta el listado consolidado de todas las ventas emitidas.
     /// </summary>
-    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
-    /// <returns>Colección de comprobantes mapeados a DTO.</returns>
     public async Task<IEnumerable<VentaResponseDto>> ObtenerTodasAsync(CancellationToken cancellationToken = default)
     {
         IEnumerable<Venta> ventas = await _ventaRepository.GetAllAsync(cancellationToken);
@@ -59,9 +52,6 @@ public class VentaService
     /// <summary>
     /// Obtiene una venta específica por su identificador GUID.
     /// </summary>
-    /// <param name="id">Identificador único de la venta.</param>
-    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
-    /// <returns>DTO de la venta localizada o null en caso contrario.</returns>
     public async Task<VentaResponseDto?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         Venta? venta = await _ventaRepository.GetByIdAsync(id, cancellationToken);
@@ -69,25 +59,18 @@ public class VentaService
     }
 
     /// <summary>
-    /// Procesa una venta en caja registradora de forma atómica: genera consecutivo, valida stock,
-    /// deduce existencias y persiste el comprobante fiscal.
+    /// Procesa una venta en caja registradora respetando el precio acordado en mostrador.
     /// </summary>
-    /// <param name="dto">Datos de entrada provistos por el cajero o POS.</param>
-    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
-    /// <returns>DTO del comprobante generado con subtotales e identificador.</returns>
-    /// <exception cref="ValidationException">Si el payload no satisface las reglas de negocio.</exception>
-    /// <exception cref="KeyNotFoundException">Si alguno de los repuestos referenciados no existe.</exception>
-    /// <exception cref="InvalidOperationException">Si no hay inventario suficiente para suplir la venta.</exception>
     public async Task<VentaResponseDto> CrearVentaAsync(CrearVentaDto dto, CancellationToken cancellationToken = default)
     {
-        // 1. Validar reglas de entrada con FluentValidation
+        // 1. Validar reglas de entrada
         await _crearVentaValidator.ValidateAndThrowAsync(dto, cancellationToken);
 
-        // 2. Generación atómica y segura del consecutivo (ej: VTA-00001)
+        // 2. Generación atómica del folio consecutivo oficial
         string consecutivo = await _consecutivoService.ObtenerSiguienteConsecutivoVentaAsync(cancellationToken);
         _logger.LogInformation("Asignando folio consecutivo {NumeroComprobante} a la nueva transacción.", consecutivo);
 
-        // 3. Crear entidad con snapshot del cliente
+        // 3. Crear cabecera con snapshot inmutable del comprador
         var nuevaVenta = new Venta(
             consecutivo,
             dto.MetodoPago,
@@ -95,7 +78,7 @@ public class VentaService
             dto.ClienteDocumento,
             dto.ClienteNombre);
 
-        // 4. Validar existencia y stock de cada repuesto de forma transaccional
+        // 4. Validar stock, costos y aplicar precio acordado
         foreach (CrearDetalleVentaDto item in dto.Detalles)
         {
             Producto? producto = await _productoRepository.GetByIdAsync(item.ProductoId, cancellationToken);
@@ -115,18 +98,30 @@ public class VentaService
                     $"Stock insuficiente para el repuesto '{producto.Nombre}'. Disponible: {producto.StockActual}, Solicitado: {item.Cantidad}");
             }
 
-            // Descontar inventario mediante método de dominio
+            // Resolución del precio: si viene del mostrador (> 0) se toma, de lo contrario el precio de catálogo
+            decimal precioAplicado = (item.PrecioUnitario.HasValue && item.PrecioUnitario.Value > 0)
+                ? item.PrecioUnitario.Value
+                : producto.PrecioVenta;
+
+            // Validación estricta anti-pérdida: No permitir venta por debajo del costo unitario registrado
+            if (producto.Costo > 0 && precioAplicado < producto.Costo)
+            {
+                throw new InvalidOperationException(
+                    $"El precio pactado (${precioAplicado:N0}) no puede ser menor al costo (${producto.Costo:N0}) para '{producto.Nombre}'.");
+            }
+
+            // Descontar inventario
             producto.AjustarStock(-item.Cantidad);
             await _productoRepository.UpdateAsync(producto, cancellationToken);
 
-            // Agregar renglón a la factura con el precio oficial vigente en catálogo
-            nuevaVenta.AgregarDetalle(producto.Id, producto.Nombre, item.Cantidad, producto.PrecioVenta);
+            // Agregar renglón con el precio efectivamente aplicado
+            nuevaVenta.AgregarDetalle(producto.Id, producto.Nombre, item.Cantidad, precioAplicado);
         }
 
-        // 5. Persistir agregado completo
+        // 5. Persistir transacción
         await _ventaRepository.AddAsync(nuevaVenta, cancellationToken);
 
-        _logger.LogInformation("Venta {NumeroComprobante} confirmada exitosamente. Total: {TotalVenta}",
+        _logger.LogInformation("Venta {NumeroComprobante} liquidada con Total: {TotalVenta}",
             nuevaVenta.NumeroComprobante, nuevaVenta.Total);
 
         return VentaResponseDto.FromEntity(nuevaVenta);

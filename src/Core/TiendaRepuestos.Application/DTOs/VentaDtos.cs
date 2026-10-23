@@ -7,7 +7,7 @@ using TiendaRepuestos.Domain.Entities;
 using TiendaRepuestos.Domain.Enums;
 
 /// <summary>
-/// Estructura de entrada para asociar un producto y su volumen en la solicitud de venta.
+/// Estructura de entrada para asociar un producto, su volumen y el precio acordado en mostrador.
 /// </summary>
 public class CrearDetalleVentaDto
 {
@@ -17,9 +17,14 @@ public class CrearDetalleVentaDto
     public Guid ProductoId { get; set; }
 
     /// <summary>
-    /// Cantidad de unidades a adquirir.
+    /// Cantidad de unidades a facturar.
     /// </summary>
     public int Cantidad { get; set; }
+
+    /// <summary>
+    /// Precio unitario pactado en mostrador. Si es nulo o menor/igual a cero, se toma el precio de lista oficial.
+    /// </summary>
+    public decimal? PrecioUnitario { get; set; }
 }
 
 /// <summary>
