@@ -101,6 +101,9 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                     b.Property<int>("Cantidad")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("Descuento")
+                        .HasColumnType("numeric");
+
                     b.Property<string>("NombreProducto")
                         .IsRequired()
                         .HasMaxLength(150)
@@ -250,6 +253,17 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ClienteDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ClienteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClienteNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Estado")
                         .HasColumnType("integer");

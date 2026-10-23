@@ -679,3 +679,17 @@ dotnet ef migrations add AgregarModuloClientes --project "src/Infrastructure/Tie
 
 dotnet ef database update --project "src/Infrastructure/TiendaRepuestos.Infrastructure" --startup-project "src/Adapters/TiendaRepuestos.Api"
 Inicia el backend con dotnet run --project "src/Adapters/TiendaRepuestos.Api". Al abrir Swagger (https://localhost:7298/swagger), verás la nueva sección Clientes con sus tres endpoints.
+
+# Resumen de Cambios Realizados
+
+IConsecutivoService.cs (Nuevo): Puerto en dominio que desacopla la obtención de números de factura de la lógica de negocio.
+
+ConsecutivoService.cs (Nuevo): Adaptador de infraestructura apoyado en nextval('seq_ventas_consecutivo') de PostgreSQL para transacciones atómicas y concurrentes.
+
+Venta.cs (Modificado): Se incorporaron las propiedades inmutables ClienteId, ClienteDocumento y ClienteNombre, blindando el registro contable histórico.
+
+VentaDtos.cs (Modificado): Se removió NumeroComprobante de CrearVentaDto para no delegarlo al frontend y se añadieron los campos opcionales del cliente.
+
+CrearVentaDtoValidator.cs (Modificado): Se eliminó la validación manual del comprobante en el input y se agregaron restricciones de longitud sobre los datos del cliente.
+
+VentaService.cs (Modificado): Orquestación limpia con inyección de IConsecutivoService, garantizando la asignación automática del folio oficial al confirmar la venta.

@@ -12,39 +12,44 @@ using TiendaRepuestos.Domain.Entities;
 using TiendaRepuestos.Domain.Ports;
 
 /// <summary>
-/// Servicio del caso de uso encargado de orquestar la creación, consulta y afectación de inventario para ventas.
+/// Orquestador del caso de uso de ventas: validación, generación atómica de folios,
+/// verificación y descuento de existencias de repuestos, y persistencia transaccional.
 /// </summary>
 public class VentaService
 {
     private readonly IVentaRepository _ventaRepository;
     private readonly IProductoRepository _productoRepository;
+    private readonly IConsecutivoService _consecutivoService;
     private readonly IValidator<CrearVentaDto> _crearVentaValidator;
     private readonly ILogger<VentaService> _logger;
 
     /// <summary>
-    /// Inicializa una nueva instancia de <see cref="VentaService"/>.
+    /// Inicializa una nueva instancia de <see cref="VentaService"/> inyectando puertos y servicios requeridos.
     /// </summary>
-    /// <param name="ventaRepository">Puerto para el almacenamiento de ventas.</param>
-    /// <param name="productoRepository">Puerto para el almacenamiento y actualización de repuestos.</param>
-    /// <param name="crearVentaValidator">Validador de reglas de negocio para el DTO de creación de ventas.</param>
-    /// <param name="logger">Servicio de registro estructurado de eventos.</param>
+    /// <param name="ventaRepository">Puerto de almacenamiento y consulta de comprobantes.</param>
+    /// <param name="productoRepository">Puerto de persistencia de inventario.</param>
+    /// <param name="consecutivoService">Puerto generador de secuencias atómicas de comprobantes.</param>
+    /// <param name="crearVentaValidator">Validador de reglas para la creación de ventas.</param>
+    /// <param name="logger">Servicio de logs estructurados.</param>
     public VentaService(
         IVentaRepository ventaRepository,
         IProductoRepository productoRepository,
+        IConsecutivoService consecutivoService,
         IValidator<CrearVentaDto> crearVentaValidator,
         ILogger<VentaService> logger)
     {
         _ventaRepository = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _productoRepository = productoRepository ?? throw new ArgumentNullException(nameof(productoRepository));
+        _consecutivoService = consecutivoService ?? throw new ArgumentNullException(nameof(consecutivoService));
         _crearVentaValidator = crearVentaValidator ?? throw new ArgumentNullException(nameof(crearVentaValidator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     }
 
     /// <summary>
-    /// Obtiene el historial general de ventas procesadas.
+    /// Consulta el listado consolidado de todas las ventas emitidas.
     /// </summary>
-    /// <param name="cancellationToken">Token de cancelación de la tarea.</param>
-    /// <returns>Colección de DTOs de ventas.</returns>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>Colección de comprobantes mapeados a DTO.</returns>
     public async Task<IEnumerable<VentaResponseDto>> ObtenerTodasAsync(CancellationToken cancellationToken = default)
     {
         IEnumerable<Venta> ventas = await _ventaRepository.GetAllAsync(cancellationToken);
@@ -52,11 +57,11 @@ public class VentaService
     }
 
     /// <summary>
-    /// Consulta una venta por su identificador único.
+    /// Obtiene una venta específica por su identificador GUID.
     /// </summary>
-    /// <param name="id">Identificador único (GUID) de la venta.</param>
-    /// <param name="cancellationToken">Token de cancelación de la tarea.</param>
-    /// <returns>DTO de la venta si se encuentra; de lo contrario, null.</returns>
+    /// <param name="id">Identificador único de la venta.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>DTO de la venta localizada o null en caso contrario.</returns>
     public async Task<VentaResponseDto?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
         Venta? venta = await _ventaRepository.GetByIdAsync(id, cancellationToken);
@@ -64,53 +69,65 @@ public class VentaService
     }
 
     /// <summary>
-    /// Procesa una transacción de venta, descuenta el stock de los repuestos involucrados y persiste el comprobante.
+    /// Procesa una venta en caja registradora de forma atómica: genera consecutivo, valida stock,
+    /// deduce existencias y persiste el comprobante fiscal.
     /// </summary>
-    /// <param name="dto">Datos del comprobante e ítems a vender.</param>
-    /// <param name="cancellationToken">Token de cancelación de la tarea.</param>
-    /// <returns>El DTO de la venta procesada con sus subtotales e impuestos calculados.</returns>
-    /// <exception cref="ValidationException">Se lanza si las reglas de validación del DTO no se cumplen.</exception>
-    /// <exception cref="KeyNotFoundException">Se lanza si alguno de los repuestos solicitados no existe.</exception>
-    /// <exception cref="InvalidOperationException">Se lanza si no hay suficiente stock para cubrir la venta.</exception>
+    /// <param name="dto">Datos de entrada provistos por el cajero o POS.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>DTO del comprobante generado con subtotales e identificador.</returns>
+    /// <exception cref="ValidationException">Si el payload no satisface las reglas de negocio.</exception>
+    /// <exception cref="KeyNotFoundException">Si alguno de los repuestos referenciados no existe.</exception>
+    /// <exception cref="InvalidOperationException">Si no hay inventario suficiente para suplir la venta.</exception>
     public async Task<VentaResponseDto> CrearVentaAsync(CrearVentaDto dto, CancellationToken cancellationToken = default)
     {
-        // 1. Validar el DTO de entrada declarativamente. Lanza ValidationException si falla.
+        // 1. Validar reglas de entrada con FluentValidation
         await _crearVentaValidator.ValidateAndThrowAsync(dto, cancellationToken);
 
-        _logger.LogInformation("Iniciando procesamiento de la venta con comprobante: {NumeroComprobante}", dto.NumeroComprobante);
+        // 2. Generación atómica y segura del consecutivo (ej: VTA-00001)
+        string consecutivo = await _consecutivoService.ObtenerSiguienteConsecutivoVentaAsync(cancellationToken);
+        _logger.LogInformation("Asignando folio consecutivo {NumeroComprobante} a la nueva transacción.", consecutivo);
 
-        Venta nuevaVenta = new Venta(dto.NumeroComprobante, dto.MetodoPago);
+        // 3. Crear entidad con snapshot del cliente
+        var nuevaVenta = new Venta(
+            consecutivo,
+            dto.MetodoPago,
+            dto.ClienteId,
+            dto.ClienteDocumento,
+            dto.ClienteNombre);
 
+        // 4. Validar existencia y stock de cada repuesto de forma transaccional
         foreach (CrearDetalleVentaDto item in dto.Detalles)
         {
             Producto? producto = await _productoRepository.GetByIdAsync(item.ProductoId, cancellationToken);
 
             if (producto == null)
             {
-                _logger.LogWarning("Intento de venta fallido. Producto con ID {ProductoId} no existe.", item.ProductoId);
+                _logger.LogWarning("Transacción abortada. Repuesto con ID {ProductoId} no localizado.", item.ProductoId);
                 throw new KeyNotFoundException($"No se encontró el repuesto con ID: {item.ProductoId}");
             }
 
             if (producto.StockActual < item.Cantidad)
             {
-                _logger.LogWarning("Stock insuficiente para el repuesto '{NombreProducto}' (ID: {ProductoId}). Requerido: {CantidadSolicitada}, Disponible: {StockActual}",
-                    producto.Nombre, producto.Id, item.Cantidad, producto.StockActual);
+                _logger.LogWarning("Stock insuficiente para '{NombreProducto}'. Disponible: {StockActual}, Solicitado: {Cantidad}",
+                    producto.Nombre, producto.StockActual, item.Cantidad);
 
                 throw new InvalidOperationException(
                     $"Stock insuficiente para el repuesto '{producto.Nombre}'. Disponible: {producto.StockActual}, Solicitado: {item.Cantidad}");
             }
 
-            // Descuento de inventario respetando el encapsulamiento del Agregado
+            // Descontar inventario mediante método de dominio
             producto.AjustarStock(-item.Cantidad);
             await _productoRepository.UpdateAsync(producto, cancellationToken);
 
-            // Agregar detalle calculando subtotal e IVA
+            // Agregar renglón a la factura con el precio oficial vigente en catálogo
             nuevaVenta.AgregarDetalle(producto.Id, producto.Nombre, item.Cantidad, producto.PrecioVenta);
         }
 
+        // 5. Persistir agregado completo
         await _ventaRepository.AddAsync(nuevaVenta, cancellationToken);
 
-        _logger.LogInformation("Venta {NumeroComprobante} registrada exitosamente con Total: {TotalVenta}", nuevaVenta.NumeroComprobante, nuevaVenta.Total);
+        _logger.LogInformation("Venta {NumeroComprobante} confirmada exitosamente. Total: {TotalVenta}",
+            nuevaVenta.NumeroComprobante, nuevaVenta.Total);
 
         return VentaResponseDto.FromEntity(nuevaVenta);
     }

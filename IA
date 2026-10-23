@@ -1,11 +1,75 @@
-# Prompt sugerido sin copiar todo los archivos de documentacion
+# Reglas para codigo sugerido Backend
 
-"Actualicemos la lección aprendida #9 y el archivo Git para el commit de RBAC"
+Siempre que me sugieres ajustes para alguna clase dame la clase completa para copiar y pegar
+SI ya lo que se requiere es un ajuste especifico, me indicas el metodo y/o la propiedad/es a modificar
+Todo codigo debe tener documentacion, clases, metodos, propiedades, enums, servicios, etc. todo debidamente docuemntado
 
-# Estructura ideal de un prompt conciso:
+# Reglas para codigo sugerido Frontend
 
-Objetivo: Ajustar RBAC en ProductosController y limpiar try-catches.
+Siempre que me sugieres ajustes para algun componente dame el componente completo para copiar y pegar
+SI ya lo que se requiere es un ajuste especifico, me indicas el metodo y/o la propiedad/es a modificar
+Todo codigo debe tener documentacion, clases, metodos, propiedades, enums, servicios, etc. todo debidamente docuemntado
 
-Ruta y Archivo: (El código que necesitas modificar).
+# Codigo de Ingeneiro nivel Senior, Profesional
 
-Salida esperada: Código completo para reemplazar y resumen de cambios.
+Siempre utilizar los mejores patrones, principios SOLID de programacion
+Siempre utilizando SRP unica reponsabilidad, principios SOLID, DRY, KISS, YAGNI
+Documentacion exhaustiva de cada clase, metodo, propiedad, enum, servicio, etc.
+No caer en Sobreingeneiria ni en antipatrones de programacion, codigo simple, legible y mantenible.
+La documentacion en español
+
+# Reglas Generales tanto para backen como para frontend
+
+Al final de la sugerencia de los cambios un resumen con los cambios realizados y los archivos modificados.
+Cuando te confirme que ls cambios ya compilan sin errores tanto en backend como en front end, procedemos a generar una nueva leccion aprendida, un nuevo commit, actualizamos el archivo Git y subimos a GitHub.
+Por otro lado tambien me des los pasos para probar lo que se acaba de ajustar, por ejemplo:
+como ejecutar el proyecto, que puertos utiliza, que puertos tengo que tener abierto en el firewall, que endpoints debo probar, que datos debo enviar, que resultados espero, etc. Y ademas cual seria el paso a seguir
+
+# Documentacion Backend
+
+Usa la documentacion del proyecto para mantener el codigo consistente con la documentacion y viceversa. La documentacion se encuentra en la carpeta docs/
+C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\docs\LECCIONES_APRENDIDAS.md
+
+C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\Git => ultima actualizacion:
+16,Integración SPA,docs: cierre de fase backend (sprint 1-3) y preparacion para integracion spa angular 19,2026-10-13,"Ajustes de CORS, contratos JSON para consumo desde Angular 19 Standalone y cierre de fase inicial."
+17,Hito 23 Masivo,"feat(inventario): persistencia masiva con upsert idempotente, indice compuesto y migracion postgresql",2026-10-15,"CargaMasivaAsync en ProductoService/Repository, índice compuesto (CodigoParte, Origen), erradicación Sonar S107 con DatosSincronizacionProducto, xmin nativo EF Core 8 y migración SoporteCargaMasivaYMultiorigen."
+
+C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\lecciones_aprendidas_y_decisiones_de_arquitectura.md => ultima actualizacion:
+
+### ADR-011: Flexibilización de Parámetros en Contratos de Creación y Mapeo Bidireccional
+
+- **Contexto:** La interoperabilidad entre clientes SPA y el Web API en .NET 8 generaba errores 400 por incompatibilidad en identificadores de categoría y omisiones en la propiedad de código de parte.
+- **Decisión:** Establecer un DTO de entrada tolerante con resolución interna de `Guid.Empty` y normalización de nombres de propiedades (`CodigoParte` en API vs `codigo` en cliente), garantizando que las consultas paginadas serialicen entidades completas y enriquecidas con marcas aftermarket y orígenes de inventario.
+- **Consecuencia:** Cero fricciones de integración, consistencia total en respuestas JSON y soporte transparente para la persistencia masiva y unitaria.
+
+C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\arquitectura_limpia_y_hexagonal_en_net_8.md => ultima modificacion:
+
+## 🔄 4. Flujo de Ejecución Horizontal (Petición HTTP)
+
+Cuando un cliente ejecuta un `POST /api/productos`:
+
+1. **API (`ProductosController`):** Recibe el DTO `CrearProductoDto` vía HTTP.
+2. **Aplicación (`ProductoService`):** Procesa el caso de uso, invoca el constructor de la entidad `Producto`.
+3. **Dominio (`Producto`):** Ejecuta sus validaciones internas (precio > 0, stock >= 0).
+4. **Aplicación (`ProductoService`):** Llama a `IProductoRepository.AddAsync()`.
+5. **Infraestructura (`ProductoRepository`):** Traduce la llamada a SQL mediante Entity Framework Core y persiste los cambios en la base de datos PostgreSQL dentro de Docker.
+6. **Aplicación/API:** Devuelve `ProductoResponseDto.FromEntity()` transformado mediante mapeo explícito al cliente.
+
+C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\pruebas => ultima modificacion:
+es un response, pero aqui tambien tengo curls de ejemplo aunque con la coleccion se guarda la peticion y respuesta
+puede sobrar a futuro
+{
+"codigo": "TEST-123",
+"nombre": "Prueba con Categoria no Existente",
+"descripcion": "Esto fallara porque la categoria no existe",
+"categoriaId": "00000000-0000-0000-0000-000000000000",
+"marcaRepuesto": "ORIGINAL",
+"marcaVehiculo": "MULTIMARCA",
+"condicion": "Nuevo",
+"origen": "PROPIO_MACROLATAS",
+"ubicacion": "BODEGA",
+"costo": 10000,
+"precioVenta": 20000,
+"stockActual": 5,
+"stockMinimo": 2
+}

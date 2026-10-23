@@ -90,7 +90,7 @@ public class ProductoService
         Producto producto = await _repository.GetByIdAsync(id, cancellationToken)
             ?? throw new KeyNotFoundException($"No se encontró el repuesto con ID: {id}");
 
-        producto.ActualizarInformacion(dto.Nombre, dto.CodigoParte, dto.CategoriaId);
+        producto.ActualizarInformacion(dto.Nombre, dto.CodigoParte, dto.CategoriaId, dto.Costo);
         producto.ActualizarPrecio(dto.PrecioVenta);
 
         await _repository.UpdateAsync(producto, cancellationToken);

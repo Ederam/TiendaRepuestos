@@ -171,7 +171,10 @@ public class Producto
     /// <param name="nombre">Nuevo nombre comercial.</param>
     /// <param name="codigoParte">Nuevo código técnico.</param>
     /// <param name="categoriaId">Nuevo identificador de categoría.</param>
-    public void ActualizarInformacion(string nombre, string codigoParte, Guid categoriaId)
+    /// <summary>
+    /// Actualiza la información básica y comercial del repuesto.
+    /// </summary>
+    public void ActualizarInformacion(string nombre, string codigoParte, Guid categoriaId, decimal costo = 0)
     {
         if (string.IsNullOrWhiteSpace(nombre))
         {
@@ -183,6 +186,11 @@ public class Producto
         if (categoriaId != Guid.Empty)
         {
             CategoriaId = categoriaId;
+        }
+
+        if (costo >= 0)
+        {
+            Costo = costo;
         }
     }
 
