@@ -1,4 +1,4 @@
-﻿namespace TiendaRepuestos.Infrastructure.Persistence.Repositories;
+namespace TiendaRepuestos.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
 using System;
@@ -10,7 +10,7 @@ using TiendaRepuestos.Domain.Entities;
 using TiendaRepuestos.Domain.Ports;
 
 /// <summary>
-/// Implementación de infraestructura para la gestión de productos mediante Entity Framework Core y PostgreSQL.
+/// Implementaci�n de infraestructura para la gesti�n de productos mediante Entity Framework Core y PostgreSQL.
 /// </summary>
 public class ProductoRepository : IProductoRepository
 {
@@ -97,8 +97,16 @@ public class ProductoRepository : IProductoRepository
 
         if (!string.IsNullOrWhiteSpace(busqueda))
         {
-            string criterio = busqueda.Trim().ToLower();
-            query = query.Where(p => p.Nombre.ToLower().Contains(criterio) || p.CodigoParte.ToLower().Contains(criterio));
+            string[] tokens = busqueda.Trim().ToLower().Split(' ', StringSplitOptions.RemoveEmptyEntries);
+            foreach (var token in tokens)
+            {
+                string t = token;
+                query = query.Where(p =>
+                    p.Nombre.ToLower().Contains(t) ||
+                    p.CodigoParte.ToLower().Contains(t) ||
+                    p.MarcaVehiculo.ToLower().Contains(t) ||
+                    p.MarcaRepuesto.ToLower().Contains(t));
+            }
         }
 
         int totalCount = await query.CountAsync(cancellationToken);

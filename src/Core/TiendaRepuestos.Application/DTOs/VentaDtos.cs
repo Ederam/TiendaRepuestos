@@ -44,7 +44,7 @@ public class CrearVentaDto
     public Guid? ClienteId { get; set; }
 
     /// <summary>
-    /// Número de cédula o NIT de facturación. Si es nulo o vacío se asigna 222222222222.
+    /// Número de cédula o NIT de facturación. Si es nulo o vacío se asigna 111111111111.
     /// </summary>
     public string? ClienteDocumento { get; set; }
 

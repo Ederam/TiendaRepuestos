@@ -142,7 +142,7 @@ public class VentaServiceTests
 
         // Assert
         resultado.Should().NotBeNull();
-        resultado.ClienteDocumento.Should().Be("222222222222");
+        resultado.ClienteDocumento.Should().Be("111111111111");
         resultado.ClienteNombre.Should().Be("Consumidor Final");
     }
 

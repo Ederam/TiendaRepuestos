@@ -100,7 +100,7 @@ public class Venta
         MetodoPago = metodoPago;
         Estado = EstadoVenta.Completada;
         ClienteId = clienteId;
-        ClienteDocumento = string.IsNullOrWhiteSpace(clienteDocumento) ? "222222222222" : clienteDocumento.Trim();
+        ClienteDocumento = string.IsNullOrWhiteSpace(clienteDocumento) ? "111111111111" : clienteDocumento.Trim();
         ClienteNombre = string.IsNullOrWhiteSpace(clienteNombre) ? "Consumidor Final" : clienteNombre.Trim();
         Subtotal = 0;
         Impuesto = 0;
