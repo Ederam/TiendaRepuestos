@@ -42,6 +42,11 @@ public class ApplicationDbContext : DbContext
     public DbSet<Usuario> Usuarios => Set<Usuario>();
 
     /// <summary>
+    /// Conjunto de entidades de clientes.
+    /// </summary>
+    public DbSet<Cliente> Clientes => Set<Cliente>();
+
+    /// <summary>
     /// Configura las entidades del modelo aplicando todas las configuraciones Fluent API del ensamblado.
     /// </summary>
     /// <param name="modelBuilder">Constructor de modelos de Entity Framework.</param>

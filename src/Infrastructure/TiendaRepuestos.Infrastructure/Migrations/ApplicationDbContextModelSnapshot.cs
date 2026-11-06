@@ -17,7 +17,7 @@ namespace TiendaRepuestos.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.31")
+                .HasAnnotation("ProductVersion", "8.0.32")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -46,6 +46,52 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                     b.ToTable("Categorias", (string)null);
                 });
 
+            modelBuilder.Entity("TiendaRepuestos.Domain.Entities.Cliente", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("Activo")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Correo")
+                        .IsRequired()
+                        .HasMaxLength(120)
+                        .HasColumnType("character varying(120)");
+
+                    b.Property<string>("Direccion")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Documento")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.Property<bool>("EsFacturaElectronica")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("Telefono")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Documento")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Clientes_Documento");
+
+                    b.ToTable("clientes", (string)null);
+                });
+
             modelBuilder.Entity("TiendaRepuestos.Domain.Entities.DetalleVenta", b =>
                 {
                     b.Property<Guid>("Id")
@@ -54,6 +100,9 @@ namespace TiendaRepuestos.Infrastructure.Migrations
 
                     b.Property<int>("Cantidad")
                         .HasColumnType("integer");
+
+                    b.Property<decimal>("Descuento")
+                        .HasColumnType("numeric");
 
                     b.Property<string>("NombreProducto")
                         .IsRequired()
@@ -88,28 +137,55 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                         .HasColumnType("uuid");
 
                     b.Property<bool>("Activo")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("boolean")
-                        .HasDefaultValue(true);
+                        .HasColumnType("boolean");
 
                     b.Property<Guid>("CategoriaId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("CodigoParte")
+                        .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("character varying(50)");
 
+                    b.Property<string>("Condicion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
+                    b.Property<decimal>("Costo")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasColumnType("text");
+
                     b.Property<int>("Estado")
                         .HasColumnType("integer");
+
+                    b.Property<string>("MarcaRepuesto")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("MarcaVehiculo")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
 
                     b.Property<string>("Nombre")
                         .IsRequired()
                         .HasMaxLength(150)
                         .HasColumnType("character varying(150)");
 
+                    b.Property<string>("Origen")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)");
+
                     b.Property<decimal>("PrecioVenta")
-                        .HasPrecision(12, 2)
-                        .HasColumnType("numeric(12,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
 
                     b.Property<int>("StockActual")
                         .HasColumnType("integer");
@@ -117,11 +193,22 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                     b.Property<int>("StockMinimo")
                         .HasColumnType("integer");
 
+                    b.Property<string>("Ubicacion")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("CodigoParte");
-
-                    b.HasIndex("Nombre");
+                    b.HasIndex("CodigoParte", "Origen")
+                        .IsUnique()
+                        .HasDatabaseName("IX_Productos_CodigoParte_Origen");
 
                     b.ToTable("productos", (string)null);
                 });
@@ -166,6 +253,17 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
+
+                    b.Property<string>("ClienteDocumento")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<Guid?>("ClienteId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ClienteNombre")
+                        .IsRequired()
+                        .HasColumnType("text");
 
                     b.Property<int>("Estado")
                         .HasColumnType("integer");

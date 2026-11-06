@@ -147,4 +147,22 @@ curl -X 'GET' \
   -H 'accept: text/plain' \
   -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlMWVlMGZjZi1jYzUyLTRmNTAtOGY0Ny0xNzViYjY3MWY1YzgiLCJlbWFpbCI6ImNhbWlsb0ByZXB1ZXN0b3MuY29tIiwibmFtZSI6IkNhbWlsbyBSYW1pcmV6IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW5pc3RyYWRvciIsImV4cCI6MTc5MTUwMDgwNywiaXNzIjoiVGllbmRhUmVwdWVzdG9zQXBpIiwiYXVkIjoiVGllbmRhUmVwdWVzdG9zQ2xpZW50cyJ9.efm4NEGPNQUTM-2ohYqbumPMV8DO6UGPFvBbLGsuRPg'
 
-  
+Payload de creacion de repuesto con error
+{"codigo":"F-200-RH-860","nombre":"HYUNDAI ACCENT 95/97 SEDAN FAROLA RH","descripcion":"","categoriaId":1,"marcaRepuesto":"TYC","marcaVehiculo":"MULTIMARCA","condicion":"Nuevo","origen":"PROPIO_MACROLATAS","ubicacion":"BODEGA PRINCIPAL","costo":0,"precioVenta":0,"stockActual":1,"stockMinimo":2}
+
+{
+    "codigo": "TEST-123",
+    "nombre": "Prueba con Categoria no Existente",
+    "descripcion": "Esto fallara porque la categoria no existe",
+    "categoriaId": "00000000-0000-0000-0000-000000000000",
+    "marcaRepuesto": "ORIGINAL",
+    "marcaVehiculo": "MULTIMARCA",
+    "condicion": "Nuevo",
+    "origen": "PROPIO_MACROLATAS",
+    "ubicacion": "BODEGA",
+    "costo": 10000,
+    "precioVenta": 20000,
+    "stockActual": 5,
+    "stockMinimo": 2
+}
+

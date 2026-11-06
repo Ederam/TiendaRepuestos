@@ -162,4 +162,20 @@ public class ProductosController : ControllerBase
         PagedResult<ProductoResponseDto> resultado = await _productoService.ObtenerPaginadoAsync(parameters, cancellationToken);
         return Ok(resultado);
     }
+
+    /// <summary>
+    /// carga masiva de repuestos desde un lote de datos, insertando o actualizando según corresponda.
+    /// </summary>
+    /// <param name="items">Lote de repuestos a procesar.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    /// <returns>Resultado de la operación de carga masiva.</returns>
+    [HttpPost("carga-masiva")]
+    public async Task<IActionResult> CargaMasiva([FromBody] List<CargaMasivaItemDto> items, CancellationToken cancellationToken)
+    {
+        if (items == null || items.Count == 0)
+            return BadRequest("El lote de repuestos no puede estar vacío.");
+
+        var resultado = await _productoService.CargaMasivaAsync(items, cancellationToken);
+        return Ok(resultado);
+    }
 }

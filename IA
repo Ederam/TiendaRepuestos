@@ -1,11 +1,65 @@
-# Prompt sugerido sin copiar todo los archivos de documentacion
+# Directrices de Ingeniería y Estándares Operativos — MACROLATAS
 
-"Actualicemos la lección aprendida #9 y el archivo Git para el commit de RBAC"
+## 1. Reglas Generales de Arquitectura y Calidad Senior
 
-# Estructura ideal de un prompt conciso:
+- **Principios Rectores:** Apego riguroso a Clean Architecture, SOLID (especialmente SRP), DRY, KISS y YAGNI. Cero sobreingeniería, código legible, simple y de fácil mantenimiento.
+- **Idioma:** Documentación y comentarios técnicos estrictamente en español.
+- **Entregas de Código:**
+  - Clases de Backend y Componentes/Servicios de Frontend deben entregarse completos, listos para copiar y pegar.
+  - Cuando se requiera un ajuste atómico sobre un archivo existente, especificar con precisión el nombre del método o las propiedades modificadas.
+- **Cierre de Ciclo:** Toda entrega debe finalizar con un resumen estructurado de archivos modificados y su protocolo paso a paso de verificación funcional (puertos, comandos, entradas y salidas esperadas).
 
-Objetivo: Ajustar RBAC en ProductosController y limpiar try-catches.
+---
 
-Ruta y Archivo: (El código que necesitas modificar).
+## 2. Reglas para Backend (.NET 8 + Clean Architecture + PostgreSQL)
 
-Salida esperada: Código completo para reemplazar y resumen de cambios.
+- **Documentación:** XML estándar exhaustiva en cada clase, método, propiedad, enum y servicio.
+- **Diseño Transaccional:** Consecutivos y operaciones atómicas delegadas al motor PostgreSQL para evitar condiciones de carrera concurrentes.
+- **Respeto a Reglas de Negocio:** En el mostrador, permitir negociación de precios siempre que cubra la regla `precioPactado >= costoUnitario`.
+- **Sincronización Documental Obligatoria:**
+  - `C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\docs\LECCIONES_APRENDIDAS.md`
+  - `C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\lecciones_aprendidas_y_decisiones_de_arquitectura.md`
+  - `C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos\Git`
+
+---
+
+## 3. Reglas para Frontend (Angular 19 Standalone + Signals + Material)
+
+- **Generación de Componentes Nuevos:** Proveer siempre la línea de comando CLI para generar simultáneamente el `.ts`, `.html` y `.scss`:
+
+  ```powershell
+  npx ng g c features/<ruta-componente> --skip-tests --style=scss
+
+  ```
+
+- **Entregas Completas:** Entregar el código completo para los 3 archivos (.ts, .html, .scss) manteniendo coherencia tipada y uso de selectores.
+- **Documentación:** TSDoc completo en componentes, clases, interfaces, métodos y señales.
+- **Reactividad:** Priorizar Angular Signals (`signal`, `computed`), inyección limpia mediante `inject()` y componentes Standalone desacoplados.
+- **Desacoplamiento (SRP):** Mantener componentes visuales por debajo de 250 líneas delegando lógica de estado a servicios dedicados (ej. `PosCartService`).
+- **Tema y Ergonomía:** Preservar estrictamente el tema oscuro corporativo (`#0b1120`, `#0f172a`), bordes sutiles y chips de estado visual.
+- **Presupuestos (Budgets):** Configurar `anyComponentStyle` en 20 kB en `angular.json` para no degradar los estilos de componentes ricos.
+- **Sincronización Documental Obligatoria:**
+  - `C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos-UI\Git_Front`
+  - `C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos-UI\hoja_de_ruta_y_lecciones_aprendidas.md`
+  - `C:\DEV_ER\Mis Archivos\Projects\Repuestos\TiendaRepuestos-UI\pruebas`
+
+---
+
+## 4. Gestión de Ambientes y Despliegue
+
+- **Local Dev:** `npm start` (apunta a `environment.development.ts`, `useMocks: false`, API: `https://localhost:7298/api`).
+- **Local Mock:** `npm run start:mock` (apunta a `environment.mock.ts`, `useMocks: true`).
+- **Vercel / Nube:** `npm run build` (apunta a `environment.prod.ts`, `useMocks: true` de forma transitoria hasta desplegar el backend).
+
+---
+
+## 5. Protocolo de Respaldo y Portabilidad de Base de Datos
+
+- **Oficina (Podman) al cerrar el día:**
+  ```powershell
+  podman exec tienda_repuestos_db pg_dump -U dev_user -d pos_repuestos_db > backup_macrolatas.sql
+  ```
+  o Casa (Docker) al iniciar la sesión:
+
+PowerShell
+docker exec -i tienda_repuestos_db psql -U dev_user -d pos_repuestos_db < backup_macrol

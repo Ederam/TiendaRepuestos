@@ -161,3 +161,70 @@ Instancias Reales en Validadores: En pruebas de servicios de aplicación, utiliz
 - **Contexto:** En catálogos extensos de repuestos, retornar listas completas impacta el ancho de banda y la memoria del servidor.
 - **Decisión:** Implementar un envoltorio inmutable `PagedResult<T>` con `Skip`/`Take`, control estricto de tamaño máximo (`PageSize` acotado a 100) y ejecución de consultas de lectura con `.AsNoTracking()`.
 - **Consecuencia:** Cero sobrecoste de memoria en el Change Tracker de EF Core para lecturas de catálogo y contratos limpios listos para componentes de paginación en el cliente.
+
+### Hito 23 — Persistencia Masiva Idempotente (Upsert), Clean Architecture y Migración PostgreSQL
+
+- **Fecha:** 2026-10-15
+- **Rama Git:** `feat/inventario-carga-masiva` (Backend: `TiendaRepuestos` | Frontend: `TiendaRepuestos-UI`)
+- **Entregables:**
+  - **Dominio Desacoplado y Libre de DTOs:** Corrección del error `CS0246` aislando `TiendaRepuestos.Domain` de cualquier contrato de `Application`. El puerto `IProductoRepository` opera exclusivamente con entidades de dominio (`Producto`), y la orquestación del mapeo reside en `ProductoService`.
+  - **Resolución de Code Smells (Sonar S107):** Encapsulación de parámetros en el objeto de dominio `DatosSincronizacionProducto` para eliminar firmas con más de 7 parámetros tanto en constructores como en métodos de mutación (`SincronizarCargaMasiva`).
+  - **Concurrencia Optimista Npgsql Moderna:** Erradicación del aviso de obsolescencia `CS0618` mediante la sintaxis nativa de EF Core 8: `builder.Property<uint>("xmin").IsRowVersion()`.
+  - **Mecanismo de Upsert Multiorigen:** Implementación de índice único compuesto `IX_Productos_CodigoParte_Origen` en PostgreSQL para permitir coexistencia de referencias idénticas entre aliados (`ALIADO_EUROCAR`) y catálogo propio (`PROPIO_MACROLATAS`).
+  - **Migración Exitosa:** Creación y aplicación de la migración `SoporteCargaMasivaYMultiorigen` apuntando a la ruta física real de adaptadores (`src/Adapters/TiendaRepuestos.Api`).
+- **Lecciones Aprendidas:**
+  - **Regla Estricta de Dependencias en Clean Architecture:** La capa de Dominio nunca debe referenciar ni conocer los DTOs de Transporte de la capa de Aplicación. La orquestación y el cálculo del Upsert en memoria $O(1)$ pertenecen a la capa de Aplicación/Servicio, dejando al repositorio únicamente la responsabilidad de consultar por claves compuestas y persistir lotes (`GuardarCambiosLoteAsync`).
+  - **Primitive Obsession y Regla Sonar S107:** Acumular argumentos primitivos en firmas de métodos degrada la legibilidad y mantenibilidad. Agrupar atributos relacionados en objetos de dominio inmutables (`records`) simplifica contratos y blinda el código contra advertencias de análisis estático.
+  - **Rutas de Ensamblado en CLI de EF Core:** Al ejecutar `dotnet ef migrations`, el flag `--startup-project` debe apuntar a la ruta real del proyecto ejecutable (en este caso `src/Adapters/TiendaRepuestos.Api` en lugar de una ruta genérica de presentación) para que el CLI resuelva correctamente los metadatos del SDK.
+
+### ADR-009: Persistencia Masiva Idempotente (Upsert) con Detección de Cambios
+
+- **Contexto:** La importación recurrente de catálogos propios (Macrolatas) y listas de aliados (Eurocar con más de 20.000 registros) no debe duplicar productos existentes ni computar modificaciones ficticias cuando los valores del archivo no han cambiado.
+- **Decisión:**
+  1. Definir una clave natural única compuesta a nivel de persistencia en PostgreSQL: `IX_Productos_CodigoParte_Origen`.
+  2. Implementar un diccionario en memoria $O(1)$ (`Origen::CodigoParte`) en `ProductoService` para discriminar entre inserciones y actualizaciones.
+  3. Delegar en la entidad `Producto` (`SincronizarCargaMasiva`) la evaluación booleana de modificaciones reales, computando con precisión registros `insertados`, `actualizados`, `sinCambios` y `omitidos`.
+- **Consecuencia:** Cero polución de stock por re-importación accidental del mismo archivo, mínimo impacto transaccional en PostgreSQL al evitar actualizaciones redundantes en disco y respuestas de métricas transparentes hacia el operador.
+
+---
+
+### Lección Aprendida #11 — Resolución de Code Smells (Sonar S107) y Aislamiento de Dominio
+
+- **Violación de la Regla de Dependencia en Clean Architecture:**
+  - _Síntoma:_ Error de compilación `CS0246` en `IProductoRepository` al referenciar DTOs de transporte (`CargaMasivaItemDto`).
+  - _Causa:_ La capa `Domain` no puede tener dependencias hacia `Application`.
+  - _Solución:_ Mantener el puerto `IProductoRepository` interactuando únicamente con entidades del dominio (`Producto`), trasladando la orquestación del mapeo y transformación al servicio de aplicación `ProductoService`.
+
+- **Control de Complejidad en Parámetros (SonarAnalyzer S107):**
+  - _Síntoma:_ Advertencia de análisis estático `S107` por constructores con 14 parámetros y métodos de sincronización con 8 parámetros.
+  - _Causa:_ Olor de código por _Primitive Obsession_ al acumular atributos técnicos del repuesto en una sola firma.
+  - _Solución:_ Mantener el constructor base con los 7 parámetros invariantes requeridos y encapsular los atributos complementarios de catálogo en el método de dominio `AsignarMetadatosCatalogo(...)` y el récord inmutable `DatosSincronizacionProducto`.
+
+- **Concurrencia Optimista Estándar en EF Core 8+ con Npgsql:**
+  - _Síntoma:_ Aviso `CS0618` por uso del método obsoleto `builder.UseXminAsConcurrencyToken()`.
+  - _Solución:_ Migrar a la sintaxis estándar de Entity Framework Core: `builder.Property<uint>("xmin").IsRowVersion()`, asegurando compatibilidad nativa con PostgreSQL sin advertencias de deprecación.
+
+- **Resolución de Metadatos en CLI de EF Core:**
+  - _Síntoma:_ Error `Unable to retrieve project metadata. Ensure it's an SDK-style project` al ejecutar `dotnet ef migrations add`.
+  - _Causa:_ El flag `--startup-project` apuntaba a una ruta inexistente (`src/Presentation/...`) en lugar de la ubicación real del ensamblado API (`src/Adapters/TiendaRepuestos.Api`).
+  - _Solución:_ Especificar siempre las rutas relativas exactas hacia los proyectos `.csproj` de infraestructura y adaptadores API.
+
+### Lección Aprendida #13 — Deserialización Estricta de GUIDs y Fallbacks de Categoría
+
+- **Incompatibilidad de Tipos Primitivos en APIs REST:** El binder de ASP.NET Core rechaza payloads JSON si un campo esperado como `System.Guid` recibe un entero (`categoriaId: 1`).
+- **Solución:** Enviar `Guid.Empty` (`00000000-0000-0000-0000-000000000000`) desde el cliente cuando se requiera fallback automático a la categoría general, permitiendo que el servicio de aplicación resuelva la categoría principal sin errores de deserialización 400.
+
+### ADR-011: Flexibilización de Parámetros en Contratos de Creación y Mapeo Bidireccional
+
+- **Contexto:** La interoperabilidad entre clientes SPA y el Web API en .NET 8 generaba errores 400 por incompatibilidad en identificadores de categoría y omisiones en la propiedad de código de parte.
+- **Decisión:** Establecer un DTO de entrada tolerante con resolución interna de `Guid.Empty` y normalización de nombres de propiedades (`CodigoParte` en API vs `codigo` en cliente), garantizando que las consultas paginadas serialicen entidades completas y enriquecidas con marcas aftermarket y orígenes de inventario.
+- **Consecuencia:** Cero fricciones de integración, consistencia total en respuestas JSON y soporte transparente para la persistencia masiva y unitaria.
+
+### ADR-012: Consecutivos Atómicos en PostgreSQL y Snapshots Inmutables de Comprador
+
+- **Contexto:** En el mostrador del 7 de Agosto la concurrencia de facturación provocaba riesgos de duplicados si el consecutivo se generaba en cliente; además, los precios unitarios son objeto de negociación comercial directa y las ventas requieren validez fiscal legal persistiendo la identidad del comprador.
+- **Decisión:**
+  1. Delegar la secuencia a PostgreSQL (`seq_ventas_consecutivo`) mediante el puerto `IConsecutivoService`, desacoplando `NumeroComprobante` de la entrada del cliente.
+  2. Implementar snapshot inmutable de `ClienteDocumento` y `ClienteNombre` en el agregado `Venta`.
+  3. Permitir que `CrearDetalleVentaDto` transporte el precio unitario acordado en el mostrador siempre que cubra la regla de negocio: `precioPactado >= costoUnitario`.
+- **Consecuencia:** Cero colisiones de folios, trazabilidad fiscal inalterable y consistencia absoluta entre la pantalla de cobro y el comprobante térmico liquidado.
