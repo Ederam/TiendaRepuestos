@@ -2,10 +2,12 @@ namespace TiendaRepuestos.Infrastructure.Persistence.Repositories;
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using TiendaRepuestos.Domain.Entities;
+using TiendaRepuestos.Domain.Models;
 using TiendaRepuestos.Domain.Ports;
 
 /// <summary>
@@ -48,6 +50,49 @@ public class VentaRepository : IVentaRepository
             .Include(v => v.Detalles)
             .AsNoTracking()
             .ToListAsync(cancellationToken);
+    }
+
+    /// <summary>
+    /// Obtiene el historial de ventas con LEFT JOIN a usuarios para resolver el nombre del vendedor.
+    /// Equivale a: SELECT v.*, u."NombreCompleto" FROM "Ventas" v LEFT JOIN usuarios u ON u."Id" = v."UsuarioId"
+    /// [WHERE v."UsuarioId" = @usuarioId] ORDER BY v."FechaVenta" DESC.
+    /// </summary>
+    public async Task<IReadOnlyList<VentaConVendedor>> ObtenerHistorialAsync(Guid? usuarioId, CancellationToken cancellationToken = default)
+    {
+        IQueryable<Venta> ventas = _context.Ventas
+            .AsNoTracking()
+            .Include(v => v.Detalles);
+
+        if (usuarioId.HasValue)
+        {
+            ventas = ventas.Where(v => v.UsuarioId == usuarioId.Value);
+        }
+
+        var filas = await (
+            from v in ventas
+            join u in _context.Usuarios.AsNoTracking() on v.UsuarioId equals (Guid?)u.Id into vendedores
+            from u in vendedores.DefaultIfEmpty()
+            orderby v.FechaVenta descending
+            select new { Venta = v, NombreVendedor = u != null ? u.NombreCompleto : null }
+        ).ToListAsync(cancellationToken);
+
+        return filas.Select(f => new VentaConVendedor(f.Venta, f.NombreVendedor)).ToList();
+    }
+
+    /// <summary>
+    /// Obtiene una venta por su identificador junto con el nombre del vendedor (LEFT JOIN a usuarios).
+    /// </summary>
+    public async Task<VentaConVendedor?> ObtenerConVendedorPorIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        var fila = await (
+            from v in _context.Ventas.AsNoTracking().Include(v => v.Detalles)
+            where v.Id == id
+            join u in _context.Usuarios.AsNoTracking() on v.UsuarioId equals (Guid?)u.Id into vendedores
+            from u in vendedores.DefaultIfEmpty()
+            select new { Venta = v, NombreVendedor = u != null ? u.NombreCompleto : null }
+        ).FirstOrDefaultAsync(cancellationToken);
+
+        return fila is null ? null : new VentaConVendedor(fila.Venta, fila.NombreVendedor);
     }
 
     /// <summary>

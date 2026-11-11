@@ -65,6 +65,11 @@ public class Venta
     /// </summary>
     public decimal Total { get; private set; }
 
+    /// <summary>
+    /// Identificador del usuario (cajero/administrador) que emitió la venta. Null en ventas históricas previas al RBAC.
+    /// </summary>
+    public Guid? UsuarioId { get; private set; }
+
     private readonly List<DetalleVenta> _detalles = new();
 
     /// <summary>
@@ -90,9 +95,11 @@ public class Venta
         MetodoPago metodoPago,
         Guid? clienteId,
         string? clienteDocumento,
-        string? clienteNombre)
+        string? clienteNombre,
+        Guid? usuarioId = null)
     {
         Id = Guid.NewGuid();
+        UsuarioId = usuarioId;
         NumeroComprobante = string.IsNullOrWhiteSpace(numeroComprobante)
             ? throw new ArgumentException("El número de comprobante es requerido.", nameof(numeroComprobante))
             : numeroComprobante;

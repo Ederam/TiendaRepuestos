@@ -1,4 +1,4 @@
-﻿namespace TiendaRepuestos.Domain.Entities;
+namespace TiendaRepuestos.Domain.Entities;
 
 using System;
 using TiendaRepuestos.Domain.Enums;
@@ -166,15 +166,15 @@ public class Producto
     }
 
     /// <summary>
-    /// Actualiza la información básica del repuesto.
-    /// </summary>
-    /// <param name="nombre">Nuevo nombre comercial.</param>
-    /// <param name="codigoParte">Nuevo código técnico.</param>
-    /// <param name="categoriaId">Nuevo identificador de categoría.</param>
-    /// <summary>
     /// Actualiza la información básica y comercial del repuesto.
     /// </summary>
-    public void ActualizarInformacion(string nombre, string codigoParte, Guid categoriaId, decimal costo = 0)
+    public void ActualizarInformacion(
+        string nombre,
+        string codigoParte,
+        Guid categoriaId,
+        decimal costo = 0,
+        int stockMinimo = -1,
+        int? stockActual = null)
     {
         if (string.IsNullOrWhiteSpace(nombre))
         {
@@ -192,6 +192,40 @@ public class Producto
         {
             Costo = costo;
         }
+
+        if (stockMinimo >= 0)
+        {
+            StockMinimo = stockMinimo;
+        }
+
+        if (stockActual.HasValue && stockActual.Value >= 0)
+        {
+            StockActual = stockActual.Value;
+        }
+    }
+
+    /// <summary>
+    /// Actualiza el umbral de alerta de stock mínimo en inventario.
+    /// </summary>
+    public void ActualizarStockMinimo(int nuevoStockMinimo)
+    {
+        if (nuevoStockMinimo < 0)
+        {
+            throw new ArgumentException("El stock mínimo no puede ser negativo.", nameof(nuevoStockMinimo));
+        }
+
+        StockMinimo = nuevoStockMinimo;
+    }
+
+    /// <summary>
+    /// Asigna una nueva categoría al repuesto.
+    /// </summary>
+    public void ActualizarCategoria(Guid nuevaCategoriaId)
+    {
+        if (nuevaCategoriaId != Guid.Empty)
+        {
+            CategoriaId = nuevaCategoriaId;
+        }
     }
 
     /// <summary>
@@ -206,6 +240,35 @@ public class Producto
         }
 
         PrecioVenta = nuevoPrecio;
+    }
+
+    /// <summary>
+    /// Establece el stock físico absoluto del repuesto (corrección desde el catálogo).
+    /// </summary>
+    public void EstablecerStock(int nuevoStock)
+    {
+        if (nuevoStock < 0)
+        {
+            throw new ArgumentException("El stock no puede ser negativo.", nameof(nuevoStock));
+        }
+
+        StockActual = nuevoStock;
+    }
+
+    /// <summary>
+    /// Actualiza ubicación y descripción permitiendo valores vacíos (edición explícita desde el catálogo).
+    /// </summary>
+    public void ActualizarUbicacionYDescripcion(string? ubicacion, string? descripcion)
+    {
+        if (ubicacion is not null)
+        {
+            Ubicacion = string.IsNullOrWhiteSpace(ubicacion) ? "BODEGA PRINCIPAL" : ubicacion.Trim().ToUpperInvariant();
+        }
+
+        if (descripcion is not null)
+        {
+            Descripcion = descripcion.Trim();
+        }
     }
 
     /// <summary>

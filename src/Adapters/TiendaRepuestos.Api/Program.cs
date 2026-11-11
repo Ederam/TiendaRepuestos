@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Text;
 using TiendaRepuestos.Api.Middlewares;
 using TiendaRepuestos.Application;
 using TiendaRepuestos.Infrastructure;
+using TiendaRepuestos.Infrastructure.Persistence;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -103,6 +105,12 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 WebApplication app = builder.Build();
+
+using (IServiceScope scope = app.Services.CreateScope())
+{
+    ApplicationDbContext dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+    dbContext.Database.Migrate();
+}
 
 // 5. Pipeline HTTP: Middleware Global de Excepciones RFC 7807
 app.UseMiddleware<ExceptionHandlingMiddleware>();
