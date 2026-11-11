@@ -101,11 +101,22 @@ public class ProductoRepository : IProductoRepository
             foreach (var token in tokens)
             {
                 string t = token;
-                query = query.Where(p =>
-                    p.Nombre.ToLower().Contains(t) ||
-                    p.CodigoParte.ToLower().Contains(t) ||
-                    p.MarcaVehiculo.ToLower().Contains(t) ||
-                    p.MarcaRepuesto.ToLower().Contains(t));
+                if (t == "bomper" || t == "bumper" || t == "bomperes" || t == "bumpers")
+                {
+                    query = query.Where(p =>
+                        p.Nombre.ToLower().Contains("bomper") ||
+                        p.Nombre.ToLower().Contains("bumper") ||
+                        p.CodigoParte.ToLower().Contains("bomper") ||
+                        p.CodigoParte.ToLower().Contains("bumper"));
+                }
+                else
+                {
+                    query = query.Where(p =>
+                        p.Nombre.ToLower().Contains(t) ||
+                        p.CodigoParte.ToLower().Contains(t) ||
+                        p.MarcaVehiculo.ToLower().Contains(t) ||
+                        p.MarcaRepuesto.ToLower().Contains(t));
+                }
             }
         }
 
@@ -130,7 +141,23 @@ public class ProductoRepository : IProductoRepository
     /// <inheritdoc/>
     public async Task UpdateAsync(Producto producto, CancellationToken cancellationToken = default)
     {
-        _context.Productos.Update(producto);
+        var entry = _context.Entry(producto);
+        if (entry.State == EntityState.Detached)
+        {
+            _context.Productos.Update(producto);
+        }
+        else
+        {
+            entry.State = EntityState.Modified;
+            entry.Property(p => p.StockActual).IsModified = true;
+            entry.Property(p => p.StockMinimo).IsModified = true;
+            entry.Property(p => p.Costo).IsModified = true;
+            entry.Property(p => p.PrecioVenta).IsModified = true;
+            entry.Property(p => p.CategoriaId).IsModified = true;
+            entry.Property(p => p.Ubicacion).IsModified = true;
+            entry.Property(p => p.Descripcion).IsModified = true;
+        }
+
         await _context.SaveChangesAsync(cancellationToken);
     }
 

@@ -5,11 +5,14 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
 using System.Threading;
 using System.Threading.Tasks;
 using TiendaRepuestos.Application.DTOs;
 using TiendaRepuestos.Application.Services;
 using TiendaRepuestos.Domain.Constants;
+using TiendaRepuestos.Domain.Enums;
 
 /// <summary>
 /// Endpoints REST para la emisión de comprobantes, facturación en caja y consulta de historial de ventas (POS).
@@ -33,18 +36,53 @@ public class VentasController : ControllerBase
     }
 
     /// <summary>
-    /// Obtiene el historial completo de comprobantes de ventas procesadas en el sistema.
+    /// Obtiene el historial de comprobantes de ventas con el vendedor que los emitió.
+    /// Vendedor: solo ve sus propias ventas (el parámetro <paramref name="vendedorId"/> se ignora).
+    /// Administrador: consolidado general, o filtrado por <paramref name="vendedorId"/> si se informa.
     /// </summary>
+    /// <param name="vendedorId">Filtro opcional por vendedor (solo Administrador).</param>
     /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
     /// <returns>Colección con el resumen de comprobantes de ventas.</returns>
     [HttpGet]
     [Authorize(Roles = Roles.Todos)]
     [ProducesResponseType(typeof(IEnumerable<VentaResponseDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] Guid? vendedorId, CancellationToken cancellationToken)
     {
-        var ventas = await _ventaService.ObtenerTodasAsync(cancellationToken);
+        var ventas = await _ventaService.ObtenerTodasAsync(ObtenerUsuarioId(), EsAdministrador(), vendedorId, cancellationToken);
         return Ok(ventas);
+    }
+
+    /// <summary>
+    /// Extrae el UsuarioId (claim NameIdentifier o sub) del token JWT autenticado.
+    /// </summary>
+    private Guid ObtenerUsuarioId()
+    {
+        string? valor = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue(JwtRegisteredClaimNames.Sub)
+            ?? User.FindFirstValue("sub")
+            ?? User.FindFirstValue("id");
+
+        if (!Guid.TryParse(valor, out Guid usuarioId) || usuarioId == Guid.Empty)
+        {
+            throw new UnauthorizedAccessException("El token no contiene un identificador de usuario válido.");
+        }
+
+        return usuarioId;
+    }
+
+    /// <summary>
+    /// Determina si el rol del token es Administrador (nombre "Administrador" o valor numérico 2).
+    /// Si Rol = 1 (Vendedor) o cualquier otro valor, retorna false y filtra estrictamente por UsuarioId.
+    /// </summary>
+    private bool EsAdministrador()
+    {
+        string? rol = User.FindFirstValue(ClaimTypes.Role)
+            ?? User.FindFirstValue("role")
+            ?? User.FindFirstValue("rolId");
+
+        return string.Equals(rol, Roles.Administrador, StringComparison.OrdinalIgnoreCase)
+            || rol == ((int)RolUsuario.Administrador).ToString();
     }
 
     /// <summary>
@@ -60,7 +98,7 @@ public class VentasController : ControllerBase
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
-        var venta = await _ventaService.ObtenerPorIdAsync(id, cancellationToken);
+        var venta = await _ventaService.ObtenerPorIdAsync(id, ObtenerUsuarioId(), EsAdministrador(), cancellationToken);
         if (venta is null)
         {
             throw new KeyNotFoundException($"No se encontró la venta con ID: {id}");
@@ -84,7 +122,7 @@ public class VentasController : ControllerBase
     public async Task<IActionResult> Create([FromBody] CrearVentaDto dto, CancellationToken cancellationToken)
     {
         // Se delega el control de excepciones (stock insuficiente, comprobante inválido) al middleware RFC 7807
-        var ventaCreada = await _ventaService.CrearVentaAsync(dto, cancellationToken);
+        var ventaCreada = await _ventaService.CrearVentaAsync(dto, ObtenerUsuarioId(), cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = ventaCreada.Id }, ventaCreada);
     }
 }

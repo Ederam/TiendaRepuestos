@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using TiendaRepuestos.Domain.Entities;
 using TiendaRepuestos.Domain.Enums;
+using TiendaRepuestos.Domain.Models;
 
 /// <summary>
 /// Estructura de entrada para asociar un producto, su volumen y el precio acordado en mostrador.
@@ -179,6 +180,26 @@ public class VentaResponseDto
     public List<DetalleVentaResponseDto> Detalles { get; set; } = new();
 
     /// <summary>
+    /// Identificador del usuario (vendedor) que emitió la venta. Null en ventas previas a la auditoría.
+    /// </summary>
+    public Guid? UsuarioId { get; set; }
+
+    /// <summary>
+    /// Nombre completo del vendedor que emitió la venta (JOIN con usuarios). Null si no está asignado.
+    /// </summary>
+    public string? NombreVendedor { get; set; }
+
+    /// <summary>
+    /// Transforma un modelo de lectura <see cref="VentaConVendedor"/> a su representación pública DTO.
+    /// </summary>
+    public static VentaResponseDto FromModel(VentaConVendedor modelo)
+    {
+        VentaResponseDto dto = FromEntity(modelo.Venta);
+        dto.NombreVendedor = modelo.NombreVendedor;
+        return dto;
+    }
+
+    /// <summary>
     /// Transforma una entidad de dominio <see cref="Venta"/> a su representación pública DTO.
     /// </summary>
     /// <param name="venta">Entidad de agregado raíz persistida.</param>
@@ -198,6 +219,7 @@ public class VentaResponseDto
             Subtotal = venta.Subtotal,
             Impuesto = venta.Impuesto,
             Total = venta.Total,
+            UsuarioId = venta.UsuarioId,
             Detalles = venta.Detalles.Select(DetalleVentaResponseDto.FromEntity).ToList()
         };
     }

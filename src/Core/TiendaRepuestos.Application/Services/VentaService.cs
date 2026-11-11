@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using TiendaRepuestos.Application.DTOs;
 using TiendaRepuestos.Domain.Entities;
+using TiendaRepuestos.Domain.Models;
 using TiendaRepuestos.Domain.Ports;
 
 /// <summary>
@@ -22,6 +23,7 @@ public class VentaService
     private readonly IConsecutivoService _consecutivoService;
     private readonly IValidator<CrearVentaDto> _crearVentaValidator;
     private readonly ILogger<VentaService> _logger;
+    private readonly IUsuarioRepository? _usuarioRepository;
 
     /// <summary>
     /// Inicializa una nueva instancia de <see cref="VentaService"/> inyectando puertos y servicios requeridos.
@@ -31,37 +33,60 @@ public class VentaService
         IProductoRepository productoRepository,
         IConsecutivoService consecutivoService,
         IValidator<CrearVentaDto> crearVentaValidator,
-        ILogger<VentaService> logger)
+        ILogger<VentaService> logger,
+        IUsuarioRepository? usuarioRepository = null)
     {
         _ventaRepository = ventaRepository ?? throw new ArgumentNullException(nameof(ventaRepository));
         _productoRepository = productoRepository ?? throw new ArgumentNullException(nameof(productoRepository));
         _consecutivoService = consecutivoService ?? throw new ArgumentNullException(nameof(consecutivoService));
         _crearVentaValidator = crearVentaValidator ?? throw new ArgumentNullException(nameof(crearVentaValidator));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        _usuarioRepository = usuarioRepository;
     }
 
     /// <summary>
-    /// Consulta el listado consolidado de todas las ventas emitidas.
+    /// Consulta el historial de ventas aplicando aislamiento por rol (RBAC).
+    /// Vendedor: siempre filtra por su propio UsuarioId (se ignora <paramref name="vendedorId"/>).
+    /// Administrador: si <paramref name="vendedorId"/> viene informado filtra por ese vendedor; si es null retorna el consolidado.
     /// </summary>
-    public async Task<IEnumerable<VentaResponseDto>> ObtenerTodasAsync(CancellationToken cancellationToken = default)
+    /// <param name="usuarioActualId">Usuario autenticado extraído del token.</param>
+    /// <param name="esAdministrador">Indica si el usuario autenticado tiene rol Administrador.</param>
+    /// <param name="vendedorId">Filtro opcional de vendedor, solo aplicable para Administradores.</param>
+    /// <param name="cancellationToken">Token de cancelación cooperativa.</param>
+    public async Task<IEnumerable<VentaResponseDto>> ObtenerTodasAsync(
+        Guid usuarioActualId,
+        bool esAdministrador,
+        Guid? vendedorId = null,
+        CancellationToken cancellationToken = default)
     {
-        IEnumerable<Venta> ventas = await _ventaRepository.GetAllAsync(cancellationToken);
-        return ventas.Select(VentaResponseDto.FromEntity);
+        Guid? filtroUsuario = esAdministrador ? vendedorId : usuarioActualId;
+
+        IReadOnlyList<VentaConVendedor> ventas = await _ventaRepository.ObtenerHistorialAsync(filtroUsuario, cancellationToken);
+        return ventas.Select(VentaResponseDto.FromModel);
     }
 
     /// <summary>
-    /// Obtiene una venta específica por su identificador GUID.
+    /// Obtiene una venta específica por su identificador GUID. Un vendedor solo accede a sus propias ventas.
     /// </summary>
-    public async Task<VentaResponseDto?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<VentaResponseDto?> ObtenerPorIdAsync(
+        Guid id,
+        Guid usuarioActualId,
+        bool esAdministrador,
+        CancellationToken cancellationToken = default)
     {
-        Venta? venta = await _ventaRepository.GetByIdAsync(id, cancellationToken);
-        return venta is null ? null : VentaResponseDto.FromEntity(venta);
+        VentaConVendedor? modelo = await _ventaRepository.ObtenerConVendedorPorIdAsync(id, cancellationToken);
+        if (modelo is null || (!esAdministrador && modelo.Venta.UsuarioId != usuarioActualId))
+        {
+            return null;
+        }
+
+        return VentaResponseDto.FromModel(modelo);
     }
 
     /// <summary>
     /// Procesa una venta en caja registradora respetando el precio acordado en mostrador.
     /// </summary>
-    public async Task<VentaResponseDto> CrearVentaAsync(CrearVentaDto dto, CancellationToken cancellationToken = default)
+    public async Task<VentaResponseDto> CrearVentaAsync(CrearVentaDto dto, Guid? usuarioId = null, CancellationToken cancellationToken = default)
     {
         // 1. Validar reglas de entrada
         await _crearVentaValidator.ValidateAndThrowAsync(dto, cancellationToken);
@@ -76,7 +101,8 @@ public class VentaService
             dto.MetodoPago,
             dto.ClienteId,
             dto.ClienteDocumento,
-            dto.ClienteNombre);
+            dto.ClienteNombre,
+            usuarioId);
 
         // 4. Validar stock, costos y aplicar precio acordado
         foreach (CrearDetalleVentaDto item in dto.Detalles)
@@ -121,9 +147,18 @@ public class VentaService
         // 5. Persistir transacción
         await _ventaRepository.AddAsync(nuevaVenta, cancellationToken);
 
-        _logger.LogInformation("Venta {NumeroComprobante} liquidada con Total: {TotalVenta}",
-            nuevaVenta.NumeroComprobante, nuevaVenta.Total);
+        string? nombreVendedor = null;
+        if (usuarioId.HasValue && usuarioId.Value != Guid.Empty && _usuarioRepository is not null)
+        {
+            Usuario? usuario = await _usuarioRepository.ObtenerPorIdAsync(usuarioId.Value, cancellationToken);
+            nombreVendedor = usuario?.NombreCompleto;
+        }
 
-        return VentaResponseDto.FromEntity(nuevaVenta);
+        _logger.LogInformation("Venta {NumeroComprobante} liquidada por UsuarioId {UsuarioId} ({NombreVendedor}) con Total: {TotalVenta}",
+            nuevaVenta.NumeroComprobante, nuevaVenta.UsuarioId, nombreVendedor, nuevaVenta.Total);
+
+        VentaResponseDto respuesta = VentaResponseDto.FromEntity(nuevaVenta);
+        respuesta.NombreVendedor = nombreVendedor;
+        return respuesta;
     }
 }

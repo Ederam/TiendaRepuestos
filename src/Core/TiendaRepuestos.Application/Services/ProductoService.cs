@@ -1,4 +1,4 @@
-﻿namespace TiendaRepuestos.Application.Services;
+namespace TiendaRepuestos.Application.Services;
 
 using System;
 using System.Collections.Generic;
@@ -90,8 +90,31 @@ public class ProductoService
         Producto producto = await _repository.GetByIdAsync(id, cancellationToken)
             ?? throw new KeyNotFoundException($"No se encontró el repuesto con ID: {id}");
 
-        producto.ActualizarInformacion(dto.Nombre, dto.CodigoParte, dto.CategoriaId, dto.Costo);
+        producto.ActualizarInformacion(dto.Nombre, dto.CodigoParte, dto.CategoriaId, dto.Costo, dto.StockMinimo, dto.StockActual);
         producto.ActualizarPrecio(dto.PrecioVenta);
+
+        if (dto.CategoriaId != Guid.Empty)
+        {
+            producto.ActualizarCategoria(dto.CategoriaId);
+        }
+
+        if (dto.StockMinimo >= 0)
+        {
+            producto.ActualizarStockMinimo(dto.StockMinimo);
+        }
+
+        producto.AsignarMetadatosCatalogo(
+            dto.Origen,
+            dto.Ubicacion,
+            dto.MarcaRepuesto,
+            dto.MarcaVehiculo,
+            dto.Condicion,
+            dto.Costo,
+            dto.Descripcion
+        );
+
+        producto.ActualizarUbicacionYDescripcion(dto.Ubicacion, dto.Descripcion);
+        producto.EstablecerStock(dto.StockActual);
 
         await _repository.UpdateAsync(producto, cancellationToken);
         return ProductoResponseDto.FromEntity(producto);

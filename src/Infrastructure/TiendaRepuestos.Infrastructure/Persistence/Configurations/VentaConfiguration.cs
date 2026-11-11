@@ -44,6 +44,18 @@ public class VentaConfiguration : IEntityTypeConfiguration<Venta>
             .IsRequired()
             .HasPrecision(18, 2);
 
+        builder.Property(v => v.UsuarioId);
+
+        builder.HasIndex(v => v.UsuarioId)
+            .HasDatabaseName("IX_Ventas_UsuarioId");
+
+        // Auditoría: cada venta referencia al usuario que la emitió (nullable para ventas históricas)
+        builder.HasOne<Usuario>()
+            .WithMany()
+            .HasForeignKey(v => v.UsuarioId)
+            .OnDelete(DeleteBehavior.Restrict)
+            .HasConstraintName("FK_Ventas_usuarios_UsuarioId");
+
         // Configuración de la relación uno a muchos con la colección de detalles privada
         builder.HasMany(v => v.Detalles)
             .WithOne()

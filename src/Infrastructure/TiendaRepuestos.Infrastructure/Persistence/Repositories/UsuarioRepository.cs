@@ -1,6 +1,9 @@
 namespace TiendaRepuestos.Infrastructure.Persistence.Repositories;
 
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TiendaRepuestos.Domain.Entities;
@@ -22,10 +25,28 @@ public class UsuarioRepository : IUsuarioRepository
     }
 
     /// <inheritdoc />
+    public async Task<Usuario?> ObtenerPorIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await _context.Usuarios
+            .AsNoTracking()
+            .FirstOrDefaultAsync(u => u.Id == id, cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task<Usuario?> ObtenerPorEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         return await _context.Usuarios
             .FirstOrDefaultAsync(u => u.Email == email.ToLower().Trim(), cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<Usuario>> ObtenerVendedoresActivosAsync(CancellationToken cancellationToken = default)
+    {
+        return await _context.Usuarios
+            .AsNoTracking()
+            .Where(u => u.Activo)
+            .OrderBy(u => u.NombreCompleto)
+            .ToListAsync(cancellationToken);
     }
 
     /// <inheritdoc />

@@ -3,6 +3,8 @@ namespace TiendaRepuestos.Application.Services;
 using FluentValidation;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using TiendaRepuestos.Application.DTOs.Auth;
@@ -102,5 +104,14 @@ public class AuthService
         _logger.LogInformation("Nuevo usuario registrado: {Email} con ID: {UsuarioId}", nuevoUsuario.Email, nuevoUsuario.Id);
 
         return AuthResponseDto.Create(nuevoUsuario, token);
+    }
+
+    /// <summary>
+    /// Obtiene el directorio de usuarios activos (vendedores y administradores) para el selector de auditoría.
+    /// </summary>
+    public async Task<IReadOnlyList<VendedorResumenDto>> ObtenerVendedoresAsync(CancellationToken cancellationToken = default)
+    {
+        IReadOnlyList<Usuario> usuarios = await _usuarioRepository.ObtenerVendedoresActivosAsync(cancellationToken);
+        return usuarios.Select(VendedorResumenDto.FromEntity).ToList();
     }
 }

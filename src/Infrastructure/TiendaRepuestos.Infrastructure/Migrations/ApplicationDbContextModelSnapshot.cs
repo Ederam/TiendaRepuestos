@@ -17,7 +17,7 @@ namespace TiendaRepuestos.Infrastructure.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "8.0.32")
+                .HasAnnotation("ProductVersion", "8.0.34")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -291,7 +291,13 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<Guid?>("UsuarioId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("UsuarioId")
+                        .HasDatabaseName("IX_Ventas_UsuarioId");
 
                     b.ToTable("Ventas", (string)null);
                 });
@@ -303,6 +309,15 @@ namespace TiendaRepuestos.Infrastructure.Migrations
                         .HasForeignKey("VentaId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("TiendaRepuestos.Domain.Entities.Venta", b =>
+                {
+                    b.HasOne("TiendaRepuestos.Domain.Entities.Usuario", null)
+                        .WithMany()
+                        .HasForeignKey("UsuarioId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .HasConstraintName("FK_Ventas_usuarios_UsuarioId");
                 });
 
             modelBuilder.Entity("TiendaRepuestos.Domain.Entities.Venta", b =>
